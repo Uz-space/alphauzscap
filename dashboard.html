@@ -1,0 +1,1334 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Claimer Pro Dashboard</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+            outline: none;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        :root {
+            --accent-hue: 0;
+            --accent-sat: 0%;
+            --accent-light: 13%;
+            --accent-color: hsl(var(--accent-hue), var(--accent-sat), var(--accent-light));
+        }
+
+        html, body {
+            width: 100%;
+            height: 100%;
+            background-color: var(--accent-color);
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+            color: #ffffff;
+            overflow: hidden;
+            transition: background-color 0.3s ease;
+        }
+
+        body {
+            display: flex;
+            flex-direction: column;
+            padding: 12px;
+        }
+
+        .bg-solid {
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            z-index: 1;
+            background-color: var(--accent-color);
+            pointer-events: none;
+            transition: background-color 0.3s ease;
+        }
+
+        .app-root {
+            position: relative;
+            z-index: 2;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .view-section {
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+            height: 100%;
+            flex-grow: 1;
+            overflow: hidden;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .table-wrapper {
+            background: transparent;
+            border: none;
+            padding: 2px;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+            overflow-y: auto;
+            gap: 10px;
+        }
+
+        .table-wrapper::-webkit-scrollbar {
+            width: 0px;
+        }
+
+        .settings-header, .view-header {
+            height: 25px;
+            min-height: 25px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0 18px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+            margin-bottom: 2px;
+            box-sizing: border-box;
+            text-align: center;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 1.2px;
+            color: #ffffff;
+            font-weight: 700;
+        }
+
+        .item-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            width: 100%;
+        }
+
+        .interactive-card {
+            width: 100%;
+            height: 50px;
+            min-height: 50px;
+            background: rgba(255, 255, 255, 0.04);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            border-radius: 25px;
+            padding: 0 18px;
+            align-items: center;
+            box-sizing: border-box;
+            cursor: pointer;
+        }
+
+        .grid-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            cursor: default;
+        }
+
+        .setting-row {
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .big-card {
+            width: 100%;
+            min-height: 140px;
+            background: rgba(255, 255, 255, 0.04);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            border-radius: 25px;
+            padding: 20px 18px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            box-sizing: border-box;
+            position: relative;
+        }
+
+        .big-card-balance {
+            font-weight: 700;
+            color: #ffffff;
+            font-size: 32px;
+            letter-spacing: -0.5px;
+            text-align: center;
+        }
+
+        .deposit-btn-main {
+            background: rgba(255, 255, 255, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: #ffffff;
+            padding: 6px 16px;
+            border-radius: 14px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .col-1, .col-2, .col-3 {
+            text-align: center;
+            justify-self: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        .row-icon {
+            width: 18px;
+            height: 18px;
+            fill: rgba(255, 255, 255, 0.85);
+            flex-shrink: 0;
+        }
+
+        .setting-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .account-name, .setting-title {
+            font-weight: 500;
+            color: #ffffff;
+            font-size: 14px;
+            letter-spacing: -0.2px;
+        }
+
+        .balance-text {
+            font-weight: 600;
+            color: #ffffff;
+            font-size: 14px;
+        }
+
+        .timer-text, .setting-value {
+            color: rgba(255, 255, 255, 0.85);
+            font-variant-numeric: tabular-nums;
+            font-size: 13px;
+        }
+
+        .color-preview-dot {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background-color: var(--accent-color);
+            border: 1px solid #ffffff;
+            display: inline-block;
+            vertical-align: middle;
+            margin-right: 6px;
+        }
+
+        .custom-toggle {
+            font-size: 12px;
+            position: relative;
+            display: inline-block;
+            width: 3.5em;
+            height: 2em;
+            user-select: none;
+            flex-shrink: 0;
+        }
+
+        .custom-toggle input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: hsl(0, 50%, 50%);
+            border-radius: 2em;
+            transition: background-color 0.3s ease;
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.4);
+        }
+
+        .toggle-slider::before {
+            content: "";
+            position: absolute;
+            height: 1.5em;
+            width: 1.5em;
+            border-radius: 50%;
+            left: 0.25em;
+            bottom: 0.25em;
+            background-color: #ffffff;
+            transition: transform 0.3s ease;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+        }
+
+        .custom-toggle input:checked + .toggle-slider {
+            background-color: hsl(120, 50%, 50%);
+        }
+
+        .custom-toggle input:checked + .toggle-slider::before {
+            transform: translateX(1.5em);
+        }
+
+        /* PIN Code Passcode Screen */
+        .passcode-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-color: var(--accent-color);
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            z-index: 200;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: opacity 0.3s ease;
+        }
+
+        .passcode-overlay.hidden {
+            display: none;
+        }
+
+        .passcode-container {
+            width: 100%;
+            max-width: 400px;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+            padding: 50px 25px 30px 25px;
+        }
+
+        .passcode-header {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            flex: 1;
+            width: 100%;
+        }
+
+        .subtitle {
+            font-size: 15px;
+            font-weight: 500;
+            color: #ffffff;
+            margin-bottom: 25px;
+            text-align: center;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+        }
+
+        .dots {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+        }
+
+        .dot {
+            width: 15px;
+            height: 15px;
+            border: 2px solid rgba(255, 255, 255, 0.8);
+            border-radius: 50%;
+            background: rgba(0, 0, 0, 0.2);
+            transition: background 0.25s cubic-bezier(0.34, 1.56, 0.64, 1),
+                        transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1),
+                        box-shadow 0.25s ease;
+        }
+
+        .dot.filled {
+            background: #ffffff;
+            transform: scale(1.2);
+            box-shadow: 0 0 14px rgba(255, 255, 255, 0.9);
+        }
+
+        .keypad {
+            display: grid;
+            grid-template-columns: repeat(3, 75px);
+            gap: 15px 20px;
+            justify-content: center;
+            margin-bottom: 10px;
+            flex-shrink: 0;
+        }
+
+        .key {
+            width: 75px;
+            height: 75px;
+            background: rgba(255, 255, 255, 0.06);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+            transition: background 0.2s cubic-bezier(0.34, 1.56, 0.64, 1),
+                        transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1),
+                        border-color 0.2s ease,
+                        box-shadow 0.2s ease;
+            will-change: transform;
+        }
+
+        .key:active {
+            background: rgba(255, 255, 255, 0.22);
+            border-color: rgba(255, 255, 255, 0.45);
+            transform: scale(0.88);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+
+        .key.pressed {
+            background: rgba(255, 255, 255, 0.22);
+            border-color: rgba(255, 255, 255, 0.45);
+            transform: scale(0.88);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+
+        .key-num {
+            font-size: 25px;
+            font-weight: 500;
+            color: #ffffff;
+            line-height: 1;
+            text-shadow: 0 1px 3px rgba(0,0,0,0.4);
+        }
+
+        /* Other Modals */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.25s ease;
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .modal-card {
+            background: rgba(255, 255, 255, 0.06);
+            backdrop-filter: blur(30px);
+            -webkit-backdrop-filter: blur(30px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 25px;
+            padding: 24px;
+            width: 100%;
+            max-width: 350px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.8);
+        }
+
+        .modal-title {
+            font-size: 13px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #ffffff;
+            text-align: center;
+        }
+
+        .modal-input {
+            width: 100%;
+            height: 46px;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 16px;
+            padding: 0 16px;
+            color: #ffffff;
+            font-size: 14px;
+            text-align: center;
+        }
+
+        .modal-input:focus {
+            border-color: #ffffff;
+        }
+
+        .crypto-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+        }
+
+        .crypto-option {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 16px;
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .crypto-option.selected {
+            border-color: #ffffff;
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .crypto-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+
+        .crypto-name {
+            font-size: 12px;
+            font-weight: 600;
+            color: #ffffff;
+        }
+
+        .calc-result {
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.8);
+            text-align: center;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 8px;
+            border-radius: 12px;
+        }
+
+        .hue-slider {
+            -webkit-appearance: none;
+            width: 100%;
+            height: 14px;
+            border-radius: 7px;
+            background: linear-gradient(to right, 
+                hsl(0, 50%, 25%), hsl(60, 50%, 25%), hsl(120, 50%, 25%), 
+                hsl(180, 50%, 25%), hsl(240, 50%, 25%), hsl(300, 50%, 25%), hsl(360, 50%, 25%));
+            outline: none;
+        }
+
+        .hue-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            background: #ffffff;
+            cursor: pointer;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.5);
+        }
+
+        .theme-preset-btn-group {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+        }
+
+        .preset-btn {
+            flex: 1;
+            height: 36px;
+            border-radius: 18px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s ease, opacity 0.2s ease;
+        }
+
+        .preset-black {
+            background: #000000;
+            color: #ffffff;
+        }
+
+        .preset-white {
+            background: #ffffff;
+            color: #000000;
+        }
+
+        .preset-btn:hover {
+            transform: translateY(-1px);
+            opacity: 0.9;
+        }
+
+        .modal-actions {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .btn {
+            height: 38px;
+            padding: 0 18px;
+            border-radius: 19px;
+            font-size: 13px;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+            transition: opacity 0.2s ease;
+        }
+
+        .btn:hover {
+            opacity: 0.9;
+        }
+
+        .btn-cancel {
+            background: rgba(255, 255, 255, 0.15);
+            color: #cccccc;
+        }
+
+        .btn-save {
+            background: #ffffff;
+            color: #000000;
+        }
+
+        .glass-tab-bar {
+            position: relative;
+            display: inline-flex;
+            justify-content: center;
+            align-items: center;
+            gap: 12px; 
+            padding: 4px;
+            background: rgba(255, 255, 255, 0.06);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 36px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            margin-bottom: 2px;
+            flex-shrink: 0;
+        }
+
+        .active-indicator {
+            position: absolute;
+            top: 4px;
+            left: 4px;
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            transform: translateX(68px);
+            transition: transform 0.35s ease;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .tab-item {
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 56px;
+            height: 56px;
+            color: rgba(255, 255, 255, 0.4);
+            text-decoration: none;
+            border-radius: 50%;
+            transition: color 0.3s ease;
+            cursor: pointer;
+            z-index: 2;
+        }
+
+        .tab-item svg {
+            width: 22px;
+            height: 22px;
+            fill: currentColor;
+            transition: transform 0.2s ease;
+        }
+
+        .tab-item.active {
+            color: #ffffff;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="bg-solid"></div>
+
+    <div class="app-root">
+        
+        <!-- 1. BALANCE VIEW -->
+        <div class="view-section hidden" id="balanceView">
+            <div class="table-wrapper">
+                <div class="view-header" data-i18n="balanceHeader">Balance</div>
+                <div class="item-list">
+                    <div class="big-card">
+                        <div class="big-card-balance" id="captchaBalanceDisplay">15.400000</div>
+                        <button class="deposit-btn-main" id="openDepositModal" data-i18n="depositBtn">+ Pul kiritish (Deposit)</button>
+                    </div>
+                    
+                    <div class="interactive-card setting-row" style="cursor: default;">
+                        <span class="setting-title" data-i18n="solvedCaptchas">Solved Captchas</span>
+                        <span class="setting-value" data-i18n="solvedCount">3,420 items</span>
+                    </div>
+                    <div class="interactive-card setting-row" style="cursor: default;">
+                        <span class="setting-title" data-i18n="serviceStatus">Service Status</span>
+                        <span class="setting-value" id="statusValueDisplay" style="color: hsl(120, 50%, 50%);" data-i18n="activeStatus">Active</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. DASHBOARD VIEW -->
+        <div class="view-section" id="dashboardView">
+            <div class="table-wrapper">
+                <div class="view-header" data-i18n="dashboardHeader">Dashboard</div>
+                <div class="item-list" id="accountsBody"></div>
+            </div>
+        </div>
+
+        <!-- 3. SETTINGS VIEW -->
+        <div class="view-section hidden" id="settingsView">
+            <div class="table-wrapper">
+                <div class="settings-header">
+                    <span data-i18n="settingsHeader">Settings</span>
+                </div>
+                <div class="item-list">
+                    <!-- Notifications -->
+                    <div class="interactive-card setting-row" style="cursor: default;">
+                        <div class="setting-left">
+                            <svg class="row-icon" viewBox="0 0 24 24"><path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.89 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1-1.5-1s-1.5.17-1.5 1v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"/></svg>
+                            <span class="setting-title" data-i18n="notifications">Notifications</span>
+                        </div>
+                        <label class="custom-toggle" onclick="event.stopPropagation()">
+                            <input type="checkbox" id="my-toggle" checked>
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+
+                    <!-- Language -->
+                    <div class="interactive-card setting-row" id="languageSettingRow">
+                        <div class="setting-left">
+                            <svg class="row-icon" viewBox="0 0 24 24"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zm6.93 6h-2.95c-.32-1.25-.78-2.45-1.38-3.56 1.84.63 3.37 1.91 4.33 3.56zM12 4.04c.83 1.2 1.48 2.53 1.91 3.96h-3.82c.43-1.43 1.08-2.76 1.91-3.96zM4.26 14C4.1 13.36 4 12.69 4 12s.1-1.36.26-2h3.38c-.08.66-.14 1.32-.14 2 0 .68.06 1.34.14 2H4.26zm.82 2h2.95c.32 1.25.78 2.45 1.38 3.56-1.84-.63-3.37-1.91-4.33-3.56zm2.95-8H5.08c.96-1.65 2.49-2.93 4.33-3.56C8.81 5.55 8.35 6.75 8.03 8zM12 19.96c-.83-1.2-1.48-2.53-1.91-3.96h3.82c-.43 1.43-1.08 2.76-1.91 3.96zM14.34 14H9.66c-.09-.66-.16-1.32-.16-2 0-.68.07-1.35.16-2h4.68c.09.65.16 1.32.16 2 0 .68-.07 1.34-.16 2zm.25 5.56c.6-1.11 1.06-2.31 1.38-3.56h2.95c-.96 1.65-2.49 2.93-4.33 3.56zM16.36 14c.08-.66.14-1.32.14-2 0-.68-.06-1.34-.14-2h3.38c.16.64.26 1.31.26 2s-.1 1.36-.26 2h-3.38z"/></svg>
+                            <span class="setting-title" data-i18n="language">Language</span>
+                        </div>
+                        <span class="setting-value" id="currentLangDisplay">English</span>
+                    </div>
+
+                    <!-- Passcode -->
+                    <div class="interactive-card setting-row" id="passcodeSettingRow">
+                        <div class="setting-left">
+                            <svg class="row-icon" viewBox="0 0 24 24"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/></svg>
+                            <span class="setting-title" data-i18n="passcodeSetting">Passcode</span>
+                        </div>
+                        <span class="setting-value" id="passcodeValueDisplay" data-i18n="changeBtn">Change</span>
+                    </div>
+
+                    <div class="interactive-card setting-row" id="addAccountRow">
+                        <div class="setting-left">
+                            <svg class="row-icon" viewBox="0 0 24 24"><path d="M15 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm-9 0c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4zm9 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2c0-2.66-5.33-4-8-4z"/></svg>
+                            <span class="setting-title" data-i18n="addAccount">Add Account</span>
+                        </div>
+                        <span class="action-chip" data-i18n="addBtn">+ Add</span>
+                    </div>
+
+                    <div class="interactive-card setting-row" style="cursor: default;">
+                        <div class="setting-left">
+                            <svg class="row-icon" viewBox="0 0 24 24"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg>
+                            <span class="setting-title" data-i18n="bgImageTitle">Orqa fon rasm</span>
+                        </div>
+                        <label class="custom-toggle" onclick="event.stopPropagation()">
+                            <input type="checkbox" id="bgToggle">
+                            <span class="toggle-slider"></span>
+                        </label>
+                        <input type="file" id="bgImageInput" accept="image/*" style="display:none" onchange="loadBackground(event)">
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <nav class="glass-tab-bar">
+            <div class="active-indicator" id="indicator"></div>
+
+            <a href="javascript:void(0)" class="tab-item" data-target="balanceView">
+                <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1.41 16.09V20h-2.67v-1.93c-1.71-.36-3.16-1.46-3.27-3.4h1.96c.1 1.05.97 1.91 2.58 1.91 1.45 0 2.3-.67 2.3-1.67 0-.98-.81-1.41-2.42-1.81-2.02-.49-4.14-1.21-4.14-3.57 0-1.72 1.31-2.93 3.03-3.29V4h2.67v1.93c1.55.33 2.8 1.36 3.01 3h-1.94c-.21-.86-.96-1.51-2.22-1.51-1.18 0-2.05.62-2.05 1.54 0 .93.75 1.35 2.29 1.74 2.16.54 4.27 1.25 4.27 3.65 0 1.81-1.39 3.05-3.19 3.41z"/></svg>
+            </a>
+            
+            <a href="javascript:void(0)" class="tab-item active" data-target="dashboardView">
+                <svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+            </a>
+            
+            <a href="javascript:void(0)" class="tab-item" data-target="settingsView">
+                <svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+            </a>
+        </nav>
+    </div>
+
+    <!-- PIN Code Passcode Screen -->
+    <div class="passcode-overlay" id="passcodeScreen" style="display:flex">
+        <div class="passcode-container">
+            <div class="passcode-header">
+                <div class="subtitle" id="passcodeSubtitle" data-i18n="enterPasscode">Enter passcode</div>
+                <div class="dots" id="dotsContainer">
+                    <div class="dot"></div>
+                    <div class="dot"></div>
+                    <div class="dot"></div>
+                    <div class="dot"></div>
+                </div>
+            </div>
+
+            <div class="keypad" id="keypad">
+                <div class="key" data-num="1"><span class="key-num">1</span></div>
+                <div class="key" data-num="2"><span class="key-num">2</span></div>
+                <div class="key" data-num="3"><span class="key-num">3</span></div>
+                <div class="key" data-num="4"><span class="key-num">4</span></div>
+                <div class="key" data-num="5"><span class="key-num">5</span></div>
+                <div class="key" data-num="6"><span class="key-num">6</span></div>
+                <div class="key" data-num="7"><span class="key-num">7</span></div>
+                <div class="key" data-num="8"><span class="key-num">8</span></div>
+                <div class="key" data-num="9"><span class="key-num">9</span></div>
+                <div style="grid-column: 2;" class="key" data-num="0"><span class="key-num">0</span></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Deposit Modal -->
+    <div class="modal-overlay" id="depositModal">
+        <div class="modal-card">
+            <div class="modal-title" data-i18n="modalDepositTitle">Pul Kiritish (Deposit)</div>
+            <div class="crypto-grid">
+                <div class="crypto-option" data-crypto="LTC" data-rate="90">
+                    <img src="https://i.ibb.co/pjbmYVJp/1000052879-302abb.png" alt="LTC" class="crypto-icon">
+                    <span class="crypto-name">LTC</span>
+                </div>
+                <div class="crypto-option selected" data-crypto="TON" data-rate="5.5">
+                    <img src="https://i.ibb.co/wNnMYQzb/1000052880-302abb.jpg" alt="TON" class="crypto-icon">
+                    <span class="crypto-name">TON</span>
+                </div>
+                <div class="crypto-option" data-crypto="TRX" data-rate="0.25">
+                    <img src="https://i.ibb.co/8grCL4QR/1000052881-302abb.png" alt="TRX" class="crypto-icon">
+                    <span class="crypto-name">TRX</span>
+                </div>
+                <div class="crypto-option" data-crypto="DOGE" data-rate="0.20">
+                    <img src="https://i.ibb.co/zMkyfgj/1000052882-302abb.jpg" alt="DOGE" class="crypto-icon">
+                    <span class="crypto-name">DOGE</span>
+                </div>
+            </div>
+            
+            <input type="number" class="modal-input" id="depositUsdInput" data-i18n-placeholder="depositPlaceholder" placeholder="Summani kiriting ($ USD)">
+            
+            <div class="calc-result" id="calcResultText">
+                Kerakli miqdor: 0.00 TON
+            </div>
+
+            <div class="modal-actions">
+                <button class="btn btn-cancel" id="cancelDepositBtn" data-i18n="cancelBtn">Bekor qilish</button>
+                <button class="btn btn-save" id="confirmDepositBtn" data-i18n="payBtn">To'lash</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="accountModal">
+        <div class="modal-card">
+            <div class="modal-title" data-i18n="modalAccTitle">Add New Account</div>
+            <input type="email"    class="modal-input" id="accountEmailInput" placeholder="Email">
+            <input type="password" class="modal-input" id="accountPassInput"  placeholder="Password" style="margin-top:10px">
+            <input type="text"     class="modal-input" id="accountApiInput"   placeholder="API Key"  style="margin-top:10px">
+            <div class="modal-actions" style="margin-top:6px">
+                <button class="btn btn-cancel" id="cancelAccBtn" data-i18n="cancelBtn">Cancel</button>
+                <button class="btn btn-save"   id="saveAccBtn"   data-i18n="addBtnModal">Add</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="langModal">
+        <div class="modal-card">
+            <div class="modal-title" data-i18n="modalLangTitle">Select Language</div>
+            <div style="display: flex; flex-direction: column; gap: 8px;">
+                <button class="btn btn-cancel lang-opt" data-lang-code="uz" style="text-align: center; width: 100%;">O'zbekcha</button>
+                <button class="btn btn-cancel lang-opt" data-lang-code="en" style="text-align: center; width: 100%;">English</button>
+                <button class="btn btn-cancel lang-opt" data-lang-code="ru" style="text-align: center; width: 100%;">Русский</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let savedBgUrl = null;
+
+        function applyBackground(url) {
+            document.body.style.backgroundImage = url ? `url('${url}')` : '';
+            document.getElementById('passcodeScreen').style.backgroundImage = url ? `url('${url}')` : '';
+            document.querySelector('.bg-solid').style.display = url ? 'none' : '';
+        }
+
+        function loadBackground(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                savedBgUrl = e.target.result;
+                document.getElementById('bgToggle').checked = true;
+                applyBackground(savedBgUrl);
+            };
+            reader.readAsDataURL(file);
+        }
+
+        document.getElementById('bgToggle').addEventListener('change', function() {
+            if (this.checked) {
+                if (savedBgUrl) {
+                    applyBackground(savedBgUrl);
+                } else {
+                    document.getElementById('bgImageInput').click();
+                }
+            } else {
+                applyBackground(null);
+            }
+        });
+
+        const translations = {
+            en: {
+                balanceHeader: "Balance",
+                solvedCaptchas: "Solved Captchas",
+                solvedCount: "3,420 items",
+                serviceStatus: "Service Status",
+                activeStatus: "Active",
+                dashboardHeader: "Dashboard",
+                settingsHeader: "Settings",
+                notifications: "Notifications",
+                passcodeSetting: "Passcode",
+                changeBtn: "Change",
+                language: "Language",
+                addAccount: "Add Account",
+                addBtn: "+ Add",
+                systemTheme: "System Theme",
+                modalAccTitle: "Add New Account",
+                modalLangTitle: "Select Language",
+                modalThemeTitle: "Select System Color",
+                cancelBtn: "Cancel",
+                saveBtn: "Save",
+                addBtnModal: "Add",
+                selectBtn: "Select",
+                originalBlack: "Original Black",
+                originalWhite: "Original White",
+                readyNow: "Ready Now",
+                depositBtn: "+ Deposit",
+                modalDepositTitle: "Deposit Funds",
+                payBtn: "Proceed",
+                enterPasscode: "Enter passcode",
+                setPasscode: "Set new passcode",
+                confirmPasscode: "Confirm passcode",
+                bgImageTitle: "Background Image",
+                bgImageBtn: "📷 Upload",
+                depositPlaceholder: "Enter amount ($ USD)",
+                accountNamePlaceholder: "Account name",
+                calcResult: "Required amount"
+            },
+            uz: {
+                balanceHeader: "Balans",
+                solvedCaptchas: "Yechilgan Kapchalar",
+                solvedCount: "3,420 ta",
+                serviceStatus: "Xizmat Holati",
+                activeStatus: "Faol",
+                dashboardHeader: "Boshqaruv paneli",
+                settingsHeader: "Sozlamalar",
+                notifications: "Bildirishnomalar",
+                passcodeSetting: "Parol",
+                changeBtn: "O'zgartirish",
+                language: "Til",
+                addAccount: "Akkaunt qo'shish",
+                addBtn: "+ Qo'shish",
+                systemTheme: "Tizim mavzusi",
+                modalAccTitle: "Yangi Akkaunt Qo'shish",
+                modalLangTitle: "Tilni Tanlang",
+                modalThemeTitle: "Tizim Rangini Tanlang",
+                cancelBtn: "Bekor qilish",
+                saveBtn: "Saqlash",
+                addBtnModal: "Qo'shish",
+                selectBtn: "Tanlash",
+                originalBlack: "Original Qora",
+                originalWhite: "Original Oq",
+                readyNow: "Tayyor",
+                depositBtn: "+ Pul kiritish",
+                modalDepositTitle: "Hisobni to'ldirish",
+                payBtn: "Davom etish",
+                enterPasscode: "PIN kodni kiriting",
+                setPasscode: "Yangi PIN kodni kiriting",
+                confirmPasscode: "PIN kodni tasdiqlang",
+                bgImageTitle: "Orqa fon rasm",
+                bgImageBtn: "📷 Yuklash",
+                depositPlaceholder: "Summani kiriting ($ USD)",
+                accountNamePlaceholder: "Akkaunt nomi",
+                calcResult: "Kerakli miqdor"
+            },
+            ru: {
+                balanceHeader: "Баланс",
+                solvedCaptchas: "Решенные капчи",
+                solvedCount: "3,420 шт",
+                serviceStatus: "Статус службы",
+                activeStatus: "Активно",
+                dashboardHeader: "Панель управления",
+                settingsHeader: "Настройки",
+                notifications: "Уведомления",
+                passcodeSetting: "Пароль",
+                changeBtn: "Изменить",
+                language: "Язык",
+                addAccount: "Добавить аккаунт",
+                addBtn: "+ Добавить",
+                systemTheme: "Тема системы",
+                modalAccTitle: "Добавить аккаунт",
+                modalLangTitle: "Выберите язык",
+                modalThemeTitle: "Выберите цвет системы",
+                cancelBtn: "Отмена",
+                saveBtn: "Сохранить",
+                addBtnModal: "Добавить",
+                selectBtn: "Выбрать",
+                originalBlack: "Оригинальный черный",
+                originalWhite: "Оригинальный белый",
+                readyNow: "Готово",
+                depositBtn: "+ Пополнить",
+                modalDepositTitle: "Пополнение баланса",
+                payBtn: "Продолжить",
+                enterPasscode: "Введите PIN-код",
+                setPasscode: "Введите новый PIN",
+                confirmPasscode: "Подтвердите PIN",
+                bgImageTitle: "Фоновое изображение",
+                bgImageBtn: "📷 Загрузить",
+                depositPlaceholder: "Введите сумму ($ USD)",
+                accountNamePlaceholder: "Название аккаунта",
+                calcResult: "Необходимая сумма"
+            }
+        };
+
+        let currentLang = 'en';
+
+        function setLanguage(lang) {
+            currentLang = lang;
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.getAttribute('data-i18n');
+                if (translations[lang][key]) {
+                    el.textContent = translations[lang][key];
+                }
+            });
+
+            document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+                const key = el.getAttribute('data-i18n-placeholder');
+                if (translations[lang][key]) {
+                    el.placeholder = translations[lang][key];
+                }
+            });
+
+            const langNames = { en: 'English', uz: "O'zbekcha", ru: 'Русский' };
+            document.getElementById('currentLangDisplay').textContent = langNames[lang];
+            updateCalculation();
+            render();
+        }
+
+        let accounts = [];
+        let systemActive = true;
+
+        // ── WebSocket connection ──────────────────────────────────────────
+        let ws;
+        function connectWS() {
+            ws = new WebSocket(`${location.protocol === 'https:' ? 'wss' : 'ws'}://${location.host}/ws`);
+
+            ws.onmessage = (e) => {
+                const msg = JSON.parse(e.data);
+                if (msg.type === 'state') {
+                    accounts = msg.accounts.map(a => ({
+                        name:     a.username || a.email,
+                        balance:  parseFloat(a.balance) || 0,
+                        timeLeft: a.timeLeft || 0,
+                        status:   a.status || ''
+                    }));
+                    render();
+                    const total = accounts.reduce((s, a) => s + a.balance, 0);
+                    document.getElementById('captchaBalanceDisplay').textContent = total.toFixed(6);
+                }
+            };
+
+            ws.onclose = () => setTimeout(connectWS, 3000);
+            ws.onerror = () => ws.close();
+
+            // keep-alive ping every 20s
+            setInterval(() => { if (ws.readyState === 1) ws.send('ping'); }, 20000);
+        }
+        connectWS();
+        // ─────────────────────────────────────────────────────────────────
+        let selectedCrypto = 'TON';
+        let cryptoRate = 5.5;
+
+        function formatTime(seconds) {
+            if (seconds <= 0) return translations[currentLang].readyNow;
+            const m = Math.floor(seconds / 60);
+            const s = seconds % 60;
+            return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+        }
+
+        function render() {
+            const container = document.getElementById('accountsBody');
+            container.innerHTML = '';
+
+            accounts.forEach((acc) => {
+                const row = document.createElement('div');
+                row.className = 'interactive-card grid-row';
+                const statusColor = acc.status === 'SUCCESS'   ? '#4caf50'
+                                   : acc.status === 'ERROR'     ? '#f44336'
+                                   : acc.status === 'LOGGED IN' ? '#4caf50'
+                                   : acc.status === 'PROCESSING'? '#ff9800'
+                                   : '#aaaaaa';
+                row.innerHTML = `
+                    <div class="col-1"><span class="account-name">${acc.name}</span></div>
+                    <div class="col-2"><span class="balance-text">${acc.balance.toFixed(6)}</span></div>
+                    <div class="col-3"><span class="timer-text" style="color:${statusColor}">${acc.status || formatTime(acc.timeLeft)}</span></div>
+                `;
+                container.appendChild(row);
+            });
+        }
+
+        
+
+        render();
+
+        const tabItems = document.querySelectorAll('.tab-item');
+        const indicator = document.getElementById('indicator');
+        const views = document.querySelectorAll('.view-section');
+
+        function moveIndicator(targetElement) {
+            if (targetElement && indicator) {
+                indicator.style.transform = `translateX(${targetElement.offsetLeft - 4}px)`;
+            }
+        }
+
+        tabItems.forEach((item) => {
+            item.addEventListener('click', function() {
+                tabItems.forEach(tab => tab.classList.remove('active'));
+                this.classList.add('active');
+                moveIndicator(this);
+
+                const targetViewId = this.getAttribute('data-target');
+                views.forEach(view => {
+                    if (view.id === targetViewId) {
+                        view.classList.remove('hidden');
+                    } else {
+                        view.classList.add('hidden');
+                    }
+                });
+            });
+        });
+
+        window.addEventListener('load', () => {
+            const activeTab = document.querySelector('.tab-item.active');
+            const targetViewId = activeTab.getAttribute('data-target');
+            views.forEach(view => {
+                if (view.id === targetViewId) {
+                    view.classList.remove('hidden');
+                } else {
+                    view.classList.add('hidden');
+                }
+            });
+            setLanguage('en');
+        });
+
+        window.addEventListener('resize', () => moveIndicator(document.querySelector('.tab-item.active')));
+
+        // PIN Code Passcode & Changing Logic
+        let savedPin = localStorage.getItem('app_pin') || "1234";
+        let enteredPin = "";
+        let passcodeMode = "verify";
+        let tempNewPin = "";
+
+        const dots = document.querySelectorAll('.dot');
+        const keypad = document.getElementById('keypad');
+        const passcodeScreen = document.getElementById('passcodeScreen');
+        const passcodeSubtitle = document.getElementById('passcodeSubtitle');
+        const passcodeSettingRow = document.getElementById('passcodeSettingRow');
+
+        function vibrate(pattern) {
+            if ("vibrate" in navigator) {
+                navigator.vibrate(pattern);
+            }
+        }
+
+        keypad.addEventListener('pointerdown', (e) => {
+            const key = e.target.closest('.key');
+            if (!key) return;
+
+            vibrate(50);
+            key.classList.add('pressed');
+
+            if (key.hasAttribute('data-num')) {
+                const num = key.getAttribute('data-num');
+                if (enteredPin.length < 4) {
+                    enteredPin += num;
+                    updateDots();
+
+                    if (enteredPin.length === 4) {
+                        setTimeout(handlePinComplete, 200);
+                    }
+                }
+            }
+        });
+
+        keypad.addEventListener('pointerup', (e) => {
+            const key = e.target.closest('.key');
+            if (key) key.classList.remove('pressed');
+        });
+
+        keypad.addEventListener('pointerleave', (e) => {
+            const key = e.target.closest('.key');
+            if (key) key.classList.remove('pressed');
+        });
+
+        function handlePinComplete() {
+            if (passcodeMode === "verify") {
+                if (enteredPin === savedPin) {
+                    passcodeScreen.style.opacity = '0';
+                    setTimeout(() => {
+                        passcodeScreen.classList.add('hidden');
+                    }, 300);
+                } else {
+                    wrongPinEffect();
+                }
+            } else if (passcodeMode === "new") {
+                tempNewPin = enteredPin;
+                enteredPin = "";
+                passcodeMode = "confirm";
+                passcodeSubtitle.textContent = translations[currentLang].confirmPasscode;
+                updateDots();
+            } else if (passcodeMode === "confirm") {
+                if (enteredPin === tempNewPin) {
+                    savedPin = enteredPin;
+                    localStorage.setItem('app_pin', savedPin);
+                    passcodeScreen.style.opacity = '0';
+                    setTimeout(() => {
+                        passcodeScreen.classList.add('hidden');
+                        passcodeMode = "verify";
+                        passcodeSubtitle.textContent = translations[currentLang].enterPasscode;
+                    }, 300);
+                } else {
+                    passcodeMode = "new";
+                    tempNewPin = "";
+                    passcodeSubtitle.textContent = translations[currentLang].setPasscode;
+                }
+                enteredPin = "";
+                updateDots();
+            }
+        }
+
+        function wrongPinEffect() {
+            const container = passcodeScreen.querySelector('.passcode-container');
+            container.style.transform = "translateX(10px)";
+            setTimeout(() => container.style.transform = "translateX(-10px)", 50);
+            setTimeout(() => container.style.transform = "translateX(10px)", 100);
+            setTimeout(() => container.style.transform = "translateX(0)", 150);
+            enteredPin = "";
+            updateDots();
+        }
+
+        passcodeSettingRow.addEventListener('click', () => {
+            passcodeMode = "new";
+            passcodeSubtitle.textContent = translations[currentLang].setPasscode;
+            enteredPin = "";
+            tempNewPin = "";
+            updateDots();
+            passcodeScreen.classList.remove('hidden');
+            passcodeScreen.style.opacity = '1';
+        });
+
+        function updateDots() {
+            dots.forEach((dot, index) => {
+                if (index < enteredPin.length) {
+                    dot.classList.add('filled');
+                } else {
+                    dot.classList.remove('filled');
+                }
+            });
+        }
+
+        // Deposit Modal & Calculation Logic
+        const depositModal = document.getElementById('depositModal');
+        const openDepositModal = document.getElementById('openDepositModal');
+        const cancelDepositBtn = document.getElementById('cancelDepositBtn');
+        const confirmDepositBtn = document.getElementById('confirmDepositBtn');
+        const depositUsdInput = document.getElementById('depositUsdInput');
+        const calcResultText = document.getElementById('calcResultText');
+        const cryptoOptions = document.querySelectorAll('.crypto-option');
+
+        function updateCalculation() {
+            const usdVal = parseFloat(depositUsdInput.value) || 0;
+            const cryptoAmount = usdVal / cryptoRate;
+            calcResultText.textContent = `${translations[currentLang].calcResult}: ${cryptoAmount.toFixed(4)} ${selectedCrypto}`;
+        }
+
+        openDepositModal.addEventListener('click', () => {
+            depositModal.classList.add('active');
+            depositUsdInput.value = '';
+            updateCalculation();
+            depositUsdInput.focus();
+        });
+
+        cancelDepositBtn.addEventListener('click', () => depositModal.classList.remove('active'));
+
+        cryptoOptions.forEach(opt => {
+            opt.addEventListener('click', function() {
+                cryptoOptions.forEach(o => o.classList.remove('selected'));
+                this.classList.add('selected');
+                selectedCrypto = this.getAttribute('data-crypto');
+                cryptoRate = parseFloat(this.getAttribute('data-rate'));
+                updateCalculation();
+            });
+        });
+
+        depositUsdInput.addEventListener('input', updateCalculation);
+
+        confirmDepositBtn.addEventListener('click', () => {
+            const usdVal = parseFloat(depositUsdInput.value);
+            if (usdVal && usdVal > 0) {
+                depositModal.classList.remove('active');
+            }
+        });
+
+        const addAccountRow = document.getElementById('addAccountRow');
+        const accountModal = document.getElementById('accountModal');
+        const cancelAccBtn = document.getElementById('cancelAccBtn');
+        const saveAccBtn = document.getElementById('saveAccBtn');
+        const accountNameInput = document.getElementById('accountNameInput');
+
+        addAccountRow.addEventListener('click', () => { accountModal.classList.add('active'); accountNameInput.value = ''; accountNameInput.focus(); });
+        cancelAccBtn.addEventListener('click', () => accountModal.classList.remove('active'));
+        saveAccBtn.addEventListener('click', async () => {
+            const email    = document.getElementById('accountEmailInput')?.value.trim()   || '';
+            const password = document.getElementById('accountPassInput')?.value.trim()    || '';
+            const api_key  = document.getElementById('accountApiInput')?.value.trim()     || '';
+            if (!email || !password || !api_key) return;
+
+            const res = await fetch('/api/accounts', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, password, api_key })
+            });
+            const data = await res.json();
+            if (data.ok) {
+                accountModal.classList.remove('active');
+            } else {
+                alert(data.error || 'Error');
+            }
+        });
+
+        const languageSettingRow = document.getElementById('languageSettingRow');
+        const langModal = document.getElementById('langModal');
+
+        languageSettingRow.addEventListener('click', () => langModal.classList.add('active'));
+        document.querySelectorAll('.lang-opt').forEach(opt => {
+            opt.addEventListener('click', function() {
+                const selectedCode = this.getAttribute('data-lang-code');
+                setLanguage(selectedCode);
+                langModal.classList.remove('active');
+            });
+        });
+    </script>
+</body>
+</html>

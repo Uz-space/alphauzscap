@@ -1,0 +1,953 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Claimer Pro Dashboard</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+            outline: none;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        :root {
+            --accent-hue: 0;
+            --accent-sat: 0%;
+            --accent-light: 13%;
+            --accent-color: hsl(var(--accent-hue), var(--accent-sat), var(--accent-light));
+        }
+
+        html, body {
+            width: 100%;
+            height: 100%;
+            background-color: var(--accent-color);
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+            color: #ffffff;
+            overflow: hidden;
+            transition: background-color 0.3s ease;
+        }
+
+        body {
+            display: flex;
+            flex-direction: column;
+            padding: 12px;
+        }
+
+        .bg-solid {
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            z-index: 1;
+            background-color: var(--accent-color);
+            pointer-events: none;
+            transition: background-color 0.3s ease;
+        }
+
+        .app-root {
+            position: relative;
+            z-index: 2;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .view-section {
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+            height: 100%;
+            flex-grow: 1;
+            overflow: hidden;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .table-wrapper {
+            background: transparent;
+            border: none;
+            padding: 2px;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+            overflow-y: auto;
+            gap: 10px;
+        }
+
+        .table-wrapper::-webkit-scrollbar {
+            width: 0px;
+        }
+
+        .settings-header, .view-header {
+            height: 25px;
+            min-height: 25px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0 18px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+            margin-bottom: 2px;
+            box-sizing: border-box;
+            text-align: center;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 1.2px;
+            color: #ffffff;
+            font-weight: 700;
+        }
+
+        .item-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            width: 100%;
+        }
+
+        .interactive-card {
+            width: 100%;
+            height: 50px;
+            min-height: 50px;
+            background: rgba(255, 255, 255, 0.04);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            border-radius: 25px;
+            padding: 0 18px;
+            align-items: center;
+            box-sizing: border-box;
+            cursor: pointer;
+        }
+
+        .grid-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            cursor: default;
+        }
+
+        .setting-row {
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .big-card {
+            width: 100%;
+            min-height: 160px;
+            background: rgba(255, 255, 255, 0.04);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            border-radius: 25px;
+            padding: 20px 18px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            box-sizing: border-box;
+        }
+
+        .col-1, .col-2, .col-3 {
+            text-align: center;
+            justify-self: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        .row-icon {
+            width: 18px;
+            height: 18px;
+            fill: rgba(255, 255, 255, 0.85);
+            flex-shrink: 0;
+        }
+
+        .setting-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .account-name, .setting-title {
+            font-weight: 500;
+            color: #ffffff;
+            font-size: 14px;
+            letter-spacing: -0.2px;
+        }
+
+        .balance-text {
+            font-weight: 600;
+            color: #ffffff;
+            font-size: 14px;
+        }
+
+        .timer-text, .setting-value {
+            color: rgba(255, 255, 255, 0.85);
+            font-variant-numeric: tabular-nums;
+            font-size: 13px;
+        }
+
+        .custom-toggle {
+            font-size: 12px;
+            position: relative;
+            display: inline-block;
+            width: 3.5em;
+            height: 2em;
+            user-select: none;
+            flex-shrink: 0;
+        }
+
+        .custom-toggle input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: hsl(0, 50%, 50%);
+            border-radius: 2em;
+            transition: background-color 0.3s ease;
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.4);
+        }
+
+        .toggle-slider::before {
+            content: "";
+            position: absolute;
+            height: 1.5em;
+            width: 1.5em;
+            border-radius: 50%;
+            left: 0.25em;
+            bottom: 0.25em;
+            background-color: #ffffff;
+            transition: transform 0.3s ease;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+        }
+
+        .custom-toggle input:checked + .toggle-slider {
+            background-color: hsl(120, 50%, 50%);
+        }
+
+        .custom-toggle input:checked + .toggle-slider::before {
+            transform: translateX(1.5em);
+        }
+
+        /* Auth Screen */
+        .auth-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-color: var(--accent-color);
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            z-index: 200;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            transition: opacity 0.3s ease;
+        }
+
+        .auth-overlay.hidden {
+            display: none;
+        }
+
+        .auth-card {
+            background: rgba(255, 255, 255, 0.06);
+            backdrop-filter: blur(30px);
+            -webkit-backdrop-filter: blur(30px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 25px;
+            padding: 28px;
+            width: 100%;
+            max-width: 360px;
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.8);
+        }
+
+        .auth-tabs {
+            display: flex;
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 14px;
+            padding: 4px;
+            margin-bottom: 4px;
+        }
+
+        .auth-tab {
+            flex: 1;
+            text-align: center;
+            padding: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.6);
+            cursor: pointer;
+            border-radius: 10px;
+            transition: all 0.2s ease;
+        }
+
+        .auth-tab.active {
+            background: #ffffff;
+            color: #000000;
+        }
+
+        .auth-title {
+            font-size: 15px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #ffffff;
+            text-align: center;
+            margin-bottom: 4px;
+        }
+
+        .auth-input {
+            width: 100%;
+            height: 46px;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 16px;
+            padding: 0 16px;
+            color: #ffffff;
+            font-size: 14px;
+        }
+
+        .auth-input:focus {
+            border-color: #ffffff;
+        }
+
+        .auth-btn {
+            width: 100%;
+            height: 44px;
+            background: #ffffff;
+            color: #000000;
+            border: none;
+            border-radius: 16px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: opacity 0.2s ease;
+            margin-top: 6px;
+        }
+
+        .auth-btn:hover {
+            opacity: 0.9;
+        }
+
+        /* Other Modals */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.25s ease;
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .modal-card {
+            background: rgba(255, 255, 255, 0.06);
+            backdrop-filter: blur(30px);
+            -webkit-backdrop-filter: blur(30px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 25px;
+            padding: 24px;
+            width: 100%;
+            max-width: 350px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.8);
+        }
+
+        .modal-title {
+            font-size: 13px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #ffffff;
+            text-align: center;
+        }
+
+        .modal-input {
+            width: 100%;
+            height: 46px;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 16px;
+            padding: 0 16px;
+            color: #ffffff;
+            font-size: 14px;
+            text-align: center;
+        }
+
+        .modal-input:focus {
+            border-color: #ffffff;
+        }
+
+        .modal-actions {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .btn {
+            height: 38px;
+            padding: 0 18px;
+            border-radius: 19px;
+            font-size: 13px;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+            transition: opacity 0.2s ease;
+        }
+
+        .btn:hover {
+            opacity: 0.9;
+        }
+
+        .btn-cancel {
+            background: rgba(255, 255, 255, 0.15);
+            color: #cccccc;
+        }
+
+        .btn-save {
+            background: #ffffff;
+            color: #000000;
+        }
+
+        .glass-tab-bar {
+            position: relative;
+            display: inline-flex;
+            justify-content: center;
+            align-items: center;
+            gap: 12px; 
+            padding: 4px;
+            background: rgba(255, 255, 255, 0.06);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 36px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            margin-bottom: 2px;
+            flex-shrink: 0;
+        }
+
+        .active-indicator {
+            position: absolute;
+            top: 4px;
+            left: 4px;
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            transform: translateX(0px);
+            transition: transform 0.35s ease;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .tab-item {
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 56px;
+            height: 56px;
+            color: rgba(255, 255, 255, 0.4);
+            text-decoration: none;
+            border-radius: 50%;
+            transition: color 0.3s ease;
+            cursor: pointer;
+            z-index: 2;
+        }
+
+        .tab-item svg {
+            width: 22px;
+            height: 22px;
+            fill: currentColor;
+            transition: transform 0.2s ease;
+        }
+
+        .tab-item.active {
+            color: #ffffff;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="bg-solid"></div>
+
+    <div class="app-root">
+        
+        <!-- 1. ADD ACCOUNT VIEW -->
+        <div class="view-section hidden" id="addAccountView">
+            <div class="table-wrapper">
+                <div class="view-header" data-i18n="addAccountHeader">Add Account</div>
+                <div class="item-list">
+                    <div class="big-card">
+                        <input type="email"    class="auth-input" id="newAccEmail"    placeholder="Email"     style="max-width:300px;">
+                        <input type="password" class="auth-input" id="newAccPassword" placeholder="Password"  style="max-width:300px;margin-top:10px;">
+                        <input type="text"     class="auth-input" id="newAccApiKey"   placeholder="API Key"   style="max-width:300px;margin-top:10px;">
+                        <input type="text"     class="auth-input" id="newAccDisplay"  placeholder="Display name (optional)" style="max-width:300px;margin-top:10px;">
+                        <p id="addAccError" style="color:#f44336;font-size:13px;margin-top:6px;display:none;max-width:300px;text-align:center;"></p>
+                        <button class="auth-btn" id="addNewAccountBtn" style="max-width:300px;margin-top:10px;">Add Account</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. DASHBOARD VIEW -->
+        <div class="view-section" id="dashboardView">
+            <div class="table-wrapper">
+                <div class="view-header" data-i18n="dashboardHeader">Dashboard</div>
+                <div class="item-list" id="accountsBody"></div>
+            </div>
+        </div>
+
+        <!-- 3. SETTINGS VIEW -->
+        <div class="view-section hidden" id="settingsView">
+            <div class="table-wrapper">
+                <div class="settings-header">
+                    <span data-i18n="settingsHeader">Settings</span>
+                </div>
+                <div class="item-list">
+                    <!-- Account Setting -->
+                    <div class="interactive-card setting-row" id="accountSettingRow">
+                        <div class="setting-left">
+                            <svg class="row-icon" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"/></svg>
+                            <span class="setting-title" data-i18n="accountSetting">Account</span>
+                        </div>
+                        <span class="setting-value" id="currentUsernameDisplay">guest</span>
+                    </div>
+
+                    <!-- Notifications -->
+                    <div class="interactive-card setting-row" style="cursor: default;">
+                        <div class="setting-left">
+                            <svg class="row-icon" viewBox="0 0 24 24"><path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.89 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1-1.5-1s-1.5.17-1.5 1v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"/></svg>
+                            <span class="setting-title" data-i18n="notifications">Notifications</span>
+                        </div>
+                        <label class="custom-toggle" onclick="event.stopPropagation()">
+                            <input type="checkbox" id="my-toggle" checked>
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+
+                    <!-- Background Image (Moved here) -->
+                    <div class="interactive-card setting-row" style="cursor: default;">
+                        <div class="setting-left">
+                            <svg class="row-icon" viewBox="0 0 24 24"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg>
+                            <span class="setting-title" data-i18n="bgImageTitle">Orqa fon rasm</span>
+                        </div>
+                        <label class="custom-toggle" onclick="event.stopPropagation()">
+                            <input type="checkbox" id="bgToggle">
+                            <span class="toggle-slider"></span>
+                        </label>
+                        <input type="file" id="bgImageInput" accept="image/*" style="display:none" onchange="loadBackground(event)">
+                    </div>
+
+                    <!-- Language (Moved here) -->
+                    <div class="interactive-card setting-row" id="languageSettingRow">
+                        <div class="setting-left">
+                            <svg class="row-icon" viewBox="0 0 24 24"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zm6.93 6h-2.95c-.32-1.25-.78-2.45-1.38-3.56 1.84.63 3.37 1.91 4.33 3.56zM12 4.04c.83 1.2 1.48 2.53 1.91 3.96h-3.82c.43-1.43 1.08-2.76 1.91-3.96zM4.26 14C4.1 13.36 4 12.69 4 12s.1-1.36.26-2h3.38c-.08.66-.14 1.32-.14 2 0 .68.06 1.34.14 2H4.26zm.82 2h2.95c.32 1.25.78 2.45 1.38 3.56-1.84-.63-3.37-1.91-4.33-3.56zm2.95-8H5.08c.96-1.65 2.49-2.93 4.33-3.56C8.81 5.55 8.35 6.75 8.03 8zM12 19.96c-.83-1.2-1.48-2.53-1.91-3.96h3.82c-.43 1.43-1.08 2.76-1.91 3.96zM14.34 14H9.66c-.09-.66-.16-1.32-.16-2 0-.68.07-1.35.16-2h4.68c.09.65.16 1.32.16 2 0 .68-.07 1.34-.16 2zm.25 5.56c.6-1.11 1.06-2.31 1.38-3.56h2.95c-.96 1.65-2.49 2.93-4.33 3.56zM16.36 14c.08-.66.14-1.32.14-2 0-.68-.06-1.34-.14-2h3.38c.16.64.26 1.31.26 2s-.1 1.36-.26 2h-3.38z"/></svg>
+                            <span class="setting-title" data-i18n="language">Language</span>
+                        </div>
+                        <span class="setting-value" id="currentLangDisplay">English</span>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <nav class="glass-tab-bar">
+            <div class="active-indicator" id="indicator"></div>
+
+            <!-- Add Account Tab -->
+            <a href="javascript:void(0)" class="tab-item" data-target="addAccountView">
+                <svg viewBox="0 0 24 24"><path d="M15 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm-9 0c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4zm9 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2c0-2.66-5.33-4-8-4z"/></svg>
+            </a>
+
+            <!-- Dashboard Tab -->
+            <a href="javascript:void(0)" class="tab-item active" data-target="dashboardView">
+                <svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+            </a>
+            
+            <!-- Settings Tab -->
+            <a href="javascript:void(0)" class="tab-item" data-target="settingsView">
+                <svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+            </a>
+        </nav>
+    </div>
+
+    <!-- Login / Register Screen -->
+    <div class="auth-overlay" id="authScreen">
+        <div class="auth-card">
+            <div class="auth-tabs">
+                <div class="auth-tab active" id="tabLogin" onclick="switchAuthMode('login')">Login</div>
+                <div class="auth-tab" id="tabRegister" onclick="switchAuthMode('register')">Register</div>
+            </div>
+            <div class="auth-title" id="authTitle">Welcome Back</div>
+            <input type="text" class="auth-input" id="authUsername" placeholder="Username">
+            <input type="password" class="auth-input" id="authPassword" placeholder="Password">
+            <p id="authError" style="color:#f44336;font-size:13px;margin-top:8px;display:none;text-align:center;"></p>
+            <button class="auth-btn" id="authSubmitBtn" onclick="handleAuth()">Sign In</button>
+        </div>
+    </div>
+
+    <!-- Password Edit Modal -->
+    <div class="modal-overlay" id="passwordModal">
+        <div class="modal-card">
+            <div class="modal-title" data-i18n="modalPassTitle">Edit Password</div>
+            <input type="password" class="modal-input" id="newPasswordInput" data-i18n-placeholder="newPasswordPlaceholder" placeholder="New password">
+            <div class="modal-actions">
+                <button class="btn btn-cancel" id="cancelPassBtn" data-i18n="cancelBtn">Cancel</button>
+                <button class="btn btn-save" id="savePassBtn" data-i18n="saveBtn">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Language Modal -->
+    <div class="modal-overlay" id="langModal">
+        <div class="modal-card">
+            <div class="modal-title" data-i18n="modalLangTitle">Select Language</div>
+            <div style="display: flex; flex-direction: column; gap: 8px;">
+                <button class="btn btn-cancel lang-opt" data-lang-code="uz" style="text-align: center; width: 100%;">O'zbekcha</button>
+                <button class="btn btn-cancel lang-opt" data-lang-code="en" style="text-align: center; width: 100%;">English</button>
+                <button class="btn btn-cancel lang-opt" data-lang-code="ru" style="text-align: center; width: 100%;">Русский</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ── Token store ────────────────────────────────────────────────────────
+        let authToken    = sessionStorage.getItem('authToken') || null;
+        let currentUser  = sessionStorage.getItem('authUser')  || null;
+        let accounts     = [];
+        let ws           = null;
+
+        // ── Translations ───────────────────────────────────────────────────────
+        const translations = {
+            en: {
+                dashboardHeader:   "Dashboard",
+                addAccountHeader:  "Add Account",
+                settingsHeader:    "Settings",
+                accountSetting:    "Account",
+                languageSetting:   "Language",
+                readyNow:          "READY",
+                modalPassTitle:    "Edit Password",
+                modalLangTitle:    "Select Language",
+                newPasswordPlaceholder: "New password",
+                saveBtn:           "Save",
+                cancelBtn:         "Cancel",
+                addBtnModal:       "Add Account",
+                accountNamePlaceholder: "Account name",
+            },
+            uz: {
+                dashboardHeader:   "Dashboard",
+                addAccountHeader:  "Akkaunt qo\'shish",
+                settingsHeader:    "Sozlamalar",
+                accountSetting:    "Akkaunt",
+                languageSetting:   "Til",
+                readyNow:          "TAYYOR",
+                modalPassTitle:    "Parolni tahrirlash",
+                modalLangTitle:    "Tilni Tanlang",
+                newPasswordPlaceholder: "Yangi parol",
+                saveBtn:           "Saqlash",
+                cancelBtn:         "Bekor qilish",
+                addBtnModal:       "Qo\'shish",
+                accountNamePlaceholder: "Akkaunt nomi",
+            },
+            ru: {
+                dashboardHeader:   "Дашборд",
+                addAccountHeader:  "Добавить аккаунт",
+                settingsHeader:    "Настройки",
+                accountSetting:    "Аккаунт",
+                languageSetting:   "Язык",
+                readyNow:          "ГОТОВ",
+                modalPassTitle:    "Изменить пароль",
+                modalLangTitle:    "Выберите язык",
+                newPasswordPlaceholder: "Новый пароль",
+                saveBtn:           "Сохранить",
+                cancelBtn:         "Отмена",
+                addBtnModal:       "Добавить",
+                accountNamePlaceholder: "Имя аккаунта",
+            },
+        };
+        let currentLang = 'en';
+
+        function setLanguage(lang) {
+            currentLang = lang;
+            const t = translations[lang];
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.getAttribute('data-i18n');
+                if (t[key]) el.textContent = t[key];
+            });
+            document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+                const key = el.getAttribute('data-i18n-placeholder');
+                if (t[key]) el.placeholder = t[key];
+            });
+            render();
+        }
+
+        // ── Helpers ────────────────────────────────────────────────────────────
+        function formatTime(seconds) {
+            if (seconds <= 0) return translations[currentLang].readyNow;
+            const m = Math.floor(seconds / 60);
+            const s = seconds % 60;
+            return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+        }
+
+        function statusColor(status) {
+            if (!status) return '#aaaaaa';
+            const s = status.toUpperCase();
+            if (s === 'SUCCESS'   || s === 'LOGGED IN') return '#4caf50';
+            if (s === 'ERROR')                           return '#f44336';
+            if (s === 'PROCESSING')                      return '#ff9800';
+            return '#aaaaaa';
+        }
+
+        function showError(id, msg) {
+            const el = document.getElementById(id);
+            if (!el) return;
+            el.textContent = msg;
+            el.style.display = msg ? 'block' : 'none';
+        }
+
+        // ── Render dashboard ───────────────────────────────────────────────────
+        function render() {
+            const container = document.getElementById('accountsBody');
+            if (!container) return;
+            container.innerHTML = '';
+            accounts.forEach(acc => {
+                const row = document.createElement('div');
+                row.className = 'interactive-card grid-row';
+                const col3 = acc.status && acc.status !== 'SUCCESS'
+                    ? `<span class="timer-text" style="color:${statusColor(acc.status)}">${acc.status}</span>`
+                    : `<span class="timer-text">${formatTime(acc.timeLeft || 0)}</span>`;
+                row.innerHTML = `
+                    <div class="col-1"><span class="account-name">${acc.display_name || acc.email}</span></div>
+                    <div class="col-2"><span class="balance-text">${parseFloat(acc.balance || 0).toFixed(6)}</span></div>
+                    <div class="col-3">${col3}</div>
+                `;
+                container.appendChild(row);
+            });
+        }
+
+        // ── WebSocket ──────────────────────────────────────────────────────────
+        function connectWS() {
+            if (!authToken) return;
+            const proto = location.protocol === 'https:' ? 'wss' : 'ws';
+            ws = new WebSocket(`${proto}://${location.host}/ws?token=${authToken}`);
+
+            ws.onmessage = e => {
+                const msg = JSON.parse(e.data);
+                if (msg.type === 'state') {
+                    accounts = msg.accounts;
+                    render();
+                }
+            };
+            ws.onclose = () => { if (authToken) setTimeout(connectWS, 3000); };
+            ws.onerror = () => ws.close();
+            setInterval(() => { if (ws && ws.readyState === 1) ws.send('ping'); }, 20000);
+        }
+
+        // ── Auth ───────────────────────────────────────────────────────────────
+        let authMode = 'login';
+
+        function switchAuthMode(mode) {
+            authMode = mode;
+            document.getElementById('tabLogin').classList.toggle('active', mode === 'login');
+            document.getElementById('tabRegister').classList.toggle('active', mode === 'register');
+            document.getElementById('authTitle').textContent    = mode === 'login' ? 'Welcome Back' : 'Create Account';
+            document.getElementById('authSubmitBtn').textContent = mode === 'login' ? 'Sign In' : 'Sign Up';
+            showError('authError', '');
+        }
+
+        async function handleAuth() {
+            const username = document.getElementById('authUsername').value.trim().toLowerCase();
+            const password = document.getElementById('authPassword').value.trim();
+            if (!username || !password) { showError('authError', 'Fill all fields'); return; }
+
+            const endpoint = authMode === 'login' ? '/api/login' : '/api/register';
+            const res  = await fetch(endpoint, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, password })
+            });
+            const data = await res.json();
+            if (!data.ok) { showError('authError', data.error || 'Error'); return; }
+
+            authToken   = data.token;
+            currentUser = data.username;
+            sessionStorage.setItem('authToken', authToken);
+            sessionStorage.setItem('authUser',  currentUser);
+            document.getElementById('currentUsernameDisplay').textContent = currentUser;
+
+            const authScreen = document.getElementById('authScreen');
+            authScreen.style.opacity = '0';
+            setTimeout(() => authScreen.classList.add('hidden'), 300);
+
+            // Load existing accounts then open WS
+            const accs = await fetch('/api/accounts', {
+                headers: { 'Authorization': `Bearer ${authToken}` }
+            }).then(r => r.json());
+            accounts = accs.accounts || [];
+            render();
+            connectWS();
+        }
+
+        // ── Add Account ────────────────────────────────────────────────────────
+        document.getElementById('addNewAccountBtn').addEventListener('click', async () => {
+            const email   = document.getElementById('newAccEmail').value.trim();
+            const pass    = document.getElementById('newAccPassword').value.trim();
+            const apiKey  = document.getElementById('newAccApiKey').value.trim();
+            const display = document.getElementById('newAccDisplay').value.trim();
+            if (!email || !pass || !apiKey) { showError('addAccError', 'Fill Email, Password and API Key'); return; }
+
+            const res  = await fetch('/api/accounts', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
+                body: JSON.stringify({ email, password: pass, api_key: apiKey, display_name: display || email.split('@')[0].toUpperCase() })
+            });
+            const data = await res.json();
+            if (!data.ok) { showError('addAccError', data.error || 'Error'); return; }
+
+            showError('addAccError', '');
+            document.getElementById('newAccEmail').value    = '';
+            document.getElementById('newAccPassword').value = '';
+            document.getElementById('newAccApiKey').value   = '';
+            document.getElementById('newAccDisplay').value  = '';
+            document.querySelector('[data-target="dashboardView"]').click();
+        });
+
+        // ── Password change ────────────────────────────────────────────────────
+        const passwordModal  = document.getElementById('passwordModal');
+        const cancelPassBtn  = document.getElementById('cancelPassBtn');
+        const savePassBtn    = document.getElementById('savePassBtn');
+        const newPasswordInput = document.getElementById('newPasswordInput');
+
+        document.getElementById('accountSettingRow').addEventListener('click', () => {
+            passwordModal.classList.add('active');
+            newPasswordInput.value = '';
+            newPasswordInput.focus();
+        });
+        cancelPassBtn.addEventListener('click', () => passwordModal.classList.remove('active'));
+        savePassBtn.addEventListener('click', async () => {
+            const newPass = newPasswordInput.value.trim();
+            if (!newPass || newPass.length < 4) { alert('Min 4 characters'); return; }
+            const res  = await fetch('/api/change-password', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
+                body: JSON.stringify({ password: newPass })
+            });
+            const data = await res.json();
+            alert(data.ok ? 'Password updated!' : (data.error || 'Error'));
+            if (data.ok) passwordModal.classList.remove('active');
+        });
+
+        // ── Language ───────────────────────────────────────────────────────────
+        const langModal = document.getElementById('langModal');
+        document.getElementById('languageSettingRow').addEventListener('click', () => langModal.classList.add('active'));
+        document.querySelectorAll('.lang-opt').forEach(opt => {
+            opt.addEventListener('click', function() {
+                setLanguage(this.getAttribute('data-lang-code'));
+                langModal.classList.remove('active');
+            });
+        });
+
+        // ── Tab navigation ─────────────────────────────────────────────────────
+        const tabItems  = document.querySelectorAll('.tab-item');
+        const indicator = document.getElementById('indicator');
+        const views     = document.querySelectorAll('.view-section');
+
+        function moveIndicator(el) {
+            if (el && indicator) indicator.style.transform = `translateX(${el.offsetLeft - 4}px)`;
+        }
+
+        tabItems.forEach(item => {
+            item.addEventListener('click', function() {
+                tabItems.forEach(t => t.classList.remove('active'));
+                this.classList.add('active');
+                moveIndicator(this);
+                const target = this.getAttribute('data-target');
+                views.forEach(v => v.classList.toggle('hidden', v.id !== target));
+            });
+        });
+
+        // ── Background ─────────────────────────────────────────────────────────
+        function applyBackground(url) {
+            document.body.style.backgroundImage            = url ? `url('${url}')` : '';
+            document.getElementById('authScreen').style.backgroundImage = url ? `url('${url}')` : '';
+        }
+        function loadBackground(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = e => { applyBackground(e.target.result); sessionStorage.setItem('bg', e.target.result); };
+            reader.readAsDataURL(file);
+        }
+        const savedBg = sessionStorage.getItem('bg');
+        if (savedBg) applyBackground(savedBg);
+
+        // ── Boot ───────────────────────────────────────────────────────────────
+        window.addEventListener('load', () => {
+            const activeTab = document.querySelector('.tab-item.active');
+            const targetId  = activeTab?.getAttribute('data-target');
+            views.forEach(v => v.classList.toggle('hidden', v.id !== targetId));
+            moveIndicator(activeTab);
+            setLanguage('en');
+
+            if (authToken && currentUser) {
+                // Already logged in from sessionStorage
+                document.getElementById('currentUsernameDisplay').textContent = currentUser;
+                const authScreen = document.getElementById('authScreen');
+                authScreen.style.opacity = '0';
+                authScreen.classList.add('hidden');
+
+                fetch('/api/accounts', { headers: { 'Authorization': `Bearer ${authToken}` } })
+                    .then(r => r.json())
+                    .then(data => { accounts = data.accounts || []; render(); connectWS(); })
+                    .catch(() => {
+                        // Token expired — force re-login
+                        sessionStorage.clear();
+                        authToken = null;
+                        authScreen.style.opacity = '1';
+                        authScreen.classList.remove('hidden');
+                    });
+            }
+        });
+
+        window.addEventListener('resize', () => moveIndicator(document.querySelector('.tab-item.active')));
+    </script>
+
+</body>
+</html>

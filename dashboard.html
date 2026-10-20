@@ -846,12 +846,12 @@
     <div class="modal-overlay" id="addAccountModal">
         <div class="modal-card">
             <div class="modal-title">Akkaunt qo'shish</div>
-            <input type="email"    class="modal-input" id="newAccountEmail"    placeholder="Email">
+            <input type="email" class="modal-input" id="newAccountEmail" placeholder="Email">
             <input type="password" class="modal-input" id="newAccountPassword" placeholder="Parol">
             <p id="addAccError" style="color:#f44336;font-size:12px;margin-top:6px;display:none;"></p>
             <div class="modal-actions">
                 <button class="btn btn-cancel" id="cancelAddAccBtn">Bekor qilish</button>
-                <button class="btn btn-save"   id="saveAddAccBtn">Qo'shish</button>
+                <button class="btn btn-save" id="saveAddAccBtn">Qo'shish</button>
             </div>
         </div>
     </div>
@@ -883,7 +883,6 @@
     </div>
 
     <script>
-        // ── State ──────────────────────────────────────────────────────────────
         let authToken   = sessionStorage.getItem('authToken') || null;
         let currentUser = sessionStorage.getItem('authUser')  || null;
         let accounts    = [];
@@ -892,7 +891,6 @@
         let searchQuery = '';
         let ws = null;
 
-        // ── Helpers ────────────────────────────────────────────────────────────
         function showErr(id, msg) {
             const el = document.getElementById(id);
             if (!el) return;
@@ -917,15 +915,12 @@
             return '#aaaaaa';
         }
 
-        // ── Render ─────────────────────────────────────────────────────────────
         function render() {
             const container = document.getElementById('accountsBody');
             if (!container) return;
             container.innerHTML = '';
 
-            const filtered = accounts.filter(a =>
-                (a.display_name || a.email || '').toLowerCase().includes(searchQuery)
-            );
+            const filtered = accounts.filter(a => (a.name || '').toLowerCase().includes(searchQuery));
 
             if (filtered.length === 0) {
                 container.innerHTML = `<div class="empty-msg">${
@@ -942,11 +937,11 @@
                         ? `<span class="timer-text" style="color:${statusColor(acc.status)}">${acc.status}</span>`
                         : `<span class="timer-text">${formatTime(acc.timeLeft)}</span>`;
                     row.innerHTML = `
-                        <div class="col-1"><span class="account-name">${acc.display_name || acc.email}</span></div>
+                        <div class="col-1"><span class="account-name">${acc.name}</span></div>
                         <div class="col-2"><span class="balance-text">${parseFloat(acc.balance||0).toFixed(6)}</span></div>
                         <div class="col-3">${col3}</div>
                     `;
-                    row.addEventListener('click', () => openAccountActionModal(acc.email));
+                    row.addEventListener('click', () => openAccountActionModal(acc.name));
                     container.appendChild(row);
                 });
             }
@@ -982,7 +977,6 @@
             }
         }
 
-        // ── WebSocket ──────────────────────────────────────────────────────────
         function connectWS() {
             if (!authToken) return;
             const proto = location.protocol === 'https:' ? 'wss' : 'ws';
@@ -1000,9 +994,7 @@
             setInterval(() => { if (ws && ws.readyState === 1) ws.send('ping'); }, 20000);
         }
 
-        // ── Auth ───────────────────────────────────────────────────────────────
         let authMode = 'login';
-
         function switchAuthMode(mode) {
             authMode = mode;
             document.getElementById('tabLogin').classList.toggle('active', mode === 'login');
@@ -1015,7 +1007,7 @@
         async function handleAuth() {
             const username = document.getElementById('authUsername').value.trim().toLowerCase();
             const password = document.getElementById('authPassword').value.trim();
-            if (!username || !password) { showErr('authError', 'Maydonlarni to'ldiring'); return; }
+            if (!username || !password) { showErr('authError', "Maydonlarni to'ldiring"); return; }
 
             const res  = await fetch(authMode === 'login' ? '/api/login' : '/api/register', {
                 method: 'POST',
@@ -1030,9 +1022,7 @@
             sessionStorage.setItem('authToken', authToken);
             sessionStorage.setItem('authUser', currentUser);
 
-            const usernameEl = document.getElementById('profileUsernameVal');
-            if (usernameEl) usernameEl.textContent = currentUser;
-
+            document.getElementById('profileUsernameVal').textContent = currentUser;
             const authScreen = document.getElementById('authScreen');
             authScreen.style.opacity = '0';
             setTimeout(() => authScreen.classList.add('hidden'), 300);
@@ -1060,11 +1050,9 @@
             switchAuthMode('login');
         }
 
-        // ── Add Account Modal ──────────────────────────────────────────────────
         const addAccountModal = document.getElementById('addAccountModal');
-
         document.getElementById('openAddAccountModalBtn').addEventListener('click', () => {
-            document.getElementById('newAccountEmail').value    = '';
+            document.getElementById('newAccountEmail').value = '';
             document.getElementById('newAccountPassword').value = '';
             showErr('addAccError', '');
             addAccountModal.classList.add('active');
@@ -1076,34 +1064,31 @@
         });
 
         document.getElementById('saveAddAccBtn').addEventListener('click', async () => {
-            const email    = document.getElementById('newAccountEmail').value.trim();
+            const name = document.getElementById('newAccountEmail').value.trim();
             const password = document.getElementById('newAccountPassword').value.trim();
-            if (!email || !password) {
+            if (!name || !password) {
                 showErr('addAccError', 'Email va parolni kiriting');
                 return;
             }
             if (apiKeys.length === 0) {
-                showErr('addAccError', 'Avval Profile > API Key qo\'shish');
+                showErr('addAccError', 'Avval Profile > API Key qo\'shing');
                 return;
             }
             const api_key = apiKeys[0].key;
             const res  = await fetch('/api/accounts', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
-                body: JSON.stringify({ email, password, api_key, display_name: email.split('@')[0].toUpperCase() })
+                body: JSON.stringify({ name, password, api_key })
             });
             const data = await res.json();
             if (!data.ok) { showErr('addAccError', data.error || 'Xatolik'); return; }
             addAccountModal.classList.remove('active');
         });
 
-        // ── Account Action Modal (edit bot password / delete) ──────────────────
         const accountActionModal = document.getElementById('accountActionModal');
-
-        function openAccountActionModal(email) {
-            selectedAccountEmail = email;
-            const acc = accounts.find(a => a.email === email);
-            document.getElementById('actionModalTitle').textContent = acc ? (acc.display_name || acc.email) : email;
+        function openAccountActionModal(name) {
+            selectedAccountEmail = name;
+            document.getElementById('actionModalTitle').textContent = name;
             document.getElementById('editPasswordInput').value = '';
             accountActionModal.classList.add('active');
             document.getElementById('editPasswordInput').focus();
@@ -1119,7 +1104,7 @@
             const res  = await fetch('/api/accounts/update', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
-                body: JSON.stringify({ email: selectedAccountEmail, password: newPass })
+                body: JSON.stringify({ name: selectedAccountEmail, password: newPass })
             });
             const data = await res.json();
             alert(data.ok ? 'Parol yangilandi!' : (data.error || 'Xatolik'));
@@ -1131,11 +1116,11 @@
             const res  = await fetch('/api/accounts/delete', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
-                body: JSON.stringify({ email: selectedAccountEmail })
+                body: JSON.stringify({ name: selectedAccountEmail })
             });
             const data = await res.json();
             if (data.ok) {
-                accounts = accounts.filter(a => a.email !== selectedAccountEmail);
+                accounts = accounts.filter(a => a.name !== selectedAccountEmail);
                 render();
                 accountActionModal.classList.remove('active');
             } else {
@@ -1143,11 +1128,9 @@
             }
         });
 
-        // ── API Keys (local, stored in sessionStorage) ─────────────────────────
         const addApiKeyModal = document.getElementById('addApiKeyModal');
-
         document.getElementById('openAddApiKeyCard').addEventListener('click', () => {
-            document.getElementById('newApiKeyName').value  = '';
+            document.getElementById('newApiKeyName').value = '';
             document.getElementById('newApiKeyValue').value = '';
             addApiKeyModal.classList.add('active');
             document.getElementById('newApiKeyName').focus();
@@ -1173,76 +1156,75 @@
             }
         }
 
-        // ── Search ─────────────────────────────────────────────────────────────
         document.getElementById('search-input').addEventListener('input', function(e) {
             searchQuery = e.target.value.toLowerCase().trim();
             render();
         });
 
-        // ── Navigation ─────────────────────────────────────────────────────────
         (function () {
-            const nav     = document.querySelector('.nav-container');
-            const sheet   = document.getElementById('sheet');
-            const toggle  = document.querySelector('.toggle-btn');
-            const links   = Array.from(sheet.querySelectorAll('.mobile-menu a'));
-            const uploadBtn   = document.getElementById('bg-upload-btn');
-            const uploadInput = document.getElementById('bg-upload-input');
+            const nav = document.querySelector(".nav-container");
+            const sheet = document.getElementById("sheet");
+            const toggle = document.querySelector(".toggle-btn");
+            const mobileLinks = Array.prototype.slice.call(sheet.querySelectorAll(".mobile-menu a"));
+            const uploadBtn = document.getElementById("bg-upload-btn");
+            const uploadInput = document.getElementById("bg-upload-input");
 
-            uploadBtn.addEventListener('click', () => uploadInput.click());
-            uploadInput.addEventListener('change', function(e) {
-                const file = e.target.files[0];
-                if (!file) return;
-                const reader = new FileReader();
-                reader.onload = ev => {
-                    document.body.style.backgroundImage = `url('${ev.target.result}')`;
-                    document.querySelector('.bg-solid').style.backgroundColor = 'transparent';
-                };
-                reader.readAsDataURL(file);
+            uploadBtn.addEventListener("click", () => uploadInput.click());
+            uploadInput.addEventListener("change", function(event) {
+                const file = event.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        document.body.style.backgroundImage = "url('" + e.target.result + "')";
+                        document.querySelector('.bg-solid').style.backgroundColor = 'transparent';
+                    };
+                    reader.readAsDataURL(file);
+                }
             });
 
-            function switchPage(pageId) {
-                document.querySelectorAll('.view-section').forEach(v => v.classList.add('hidden'));
-                const view = document.getElementById(pageId);
-                if (view) view.classList.remove('hidden');
-                const searchBar = document.getElementById('searchBarContainer');
-                const tabBar    = document.getElementById('tabBar');
-                if (pageId === 'homeView') {
-                    searchBar.style.display = 'flex';
-                    tabBar.style.display    = 'inline-flex';
-                } else {
-                    searchBar.style.display = 'none';
-                    tabBar.style.display    = 'none';
-                }
-            }
-
-            function setOpen(open) {
-                const isOpen = typeof open === 'boolean' ? open : !nav.classList.contains('nav--open');
-                nav.classList.toggle('nav--open', isOpen);
-                toggle.setAttribute('aria-expanded', String(isOpen));
-                toggle.setAttribute('aria-label', isOpen ? 'Close menu' : 'Open menu');
-                sheet.setAttribute('aria-hidden', String(!isOpen));
-                if (isOpen) sheet.removeAttribute('inert'); else sheet.setAttribute('inert', '');
-            }
-
-            links.forEach(link => {
-                link.addEventListener('click', function() {
-                    links.forEach(l => l.classList.remove('active'));
-                    this.classList.add('active');
-                    switchPage(this.getAttribute('data-page'));
+            mobileLinks.forEach(function(link) {
+                link.addEventListener("click", function() {
+                    mobileLinks.forEach(l => l.classList.remove("active"));
+                    this.classList.add("active");
+                    switchPage(this.getAttribute("data-page"));
                     setOpen(false);
                 });
             });
 
-            toggle.addEventListener('click', () => setOpen());
-            document.addEventListener('keydown', e => {
-                if (e.key === 'Escape' && nav.classList.contains('nav--open')) {
+            function switchPage(pageId) {
+                document.querySelectorAll(".view-section").forEach(v => v.classList.add("hidden"));
+                const selectedView = document.getElementById(pageId);
+                if (selectedView) selectedView.classList.remove("hidden");
+
+                const searchBar = document.getElementById("searchBarContainer");
+                const tabBar = document.getElementById("tabBar");
+                if (pageId === "homeView") {
+                    searchBar.style.display = "flex";
+                    tabBar.style.display = "inline-flex";
+                } else {
+                    searchBar.style.display = "none";
+                    tabBar.style.display = "none";
+                }
+            }
+
+            function setOpen(getOpen) {
+                const open = typeof getOpen === "boolean" ? getOpen : !nav.classList.contains("nav--open");
+                nav.classList.toggle("nav--open", open);
+                toggle.setAttribute("aria-expanded", String(open));
+                toggle.setAttribute("aria-label", open ? "Close menu" : "Open menu");
+                sheet.setAttribute("aria-hidden", String(!open));
+                if (open) { sheet.removeAttribute("inert"); } else { sheet.setAttribute("inert", ""); }
+            }
+
+            toggle.addEventListener("click", () => setOpen());
+            document.addEventListener("keydown", event => {
+                if (event.key === 'Escape' && nav.classList.contains('nav--open')) {
                     setOpen(false);
                     toggle.focus();
                 }
             });
         })();
 
-        // ── Accordion ──────────────────────────────────────────────────────────
         function toggleAccordion(header) {
             const parent = header.parentElement;
             const isOpen = parent.classList.contains('open');
@@ -1250,13 +1232,10 @@
             if (!isOpen) parent.classList.add('open');
         }
 
-        // ── Boot ───────────────────────────────────────────────────────────────
         window.addEventListener('load', async () => {
             render();
             if (authToken && currentUser) {
-                const usernameEl = document.getElementById('profileUsernameVal');
-                if (usernameEl) usernameEl.textContent = currentUser;
-
+                document.getElementById('profileUsernameVal').textContent = currentUser;
                 const authScreen = document.getElementById('authScreen');
                 authScreen.style.opacity = '0';
                 authScreen.classList.add('hidden');
@@ -1278,6 +1257,5 @@
             }
         });
     </script>
-
 </body>
 </html>

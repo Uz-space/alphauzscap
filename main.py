@@ -265,7 +265,7 @@ def _get_username(credentials: HTTPAuthorizationCredentials = Depends(security))
     return username
 
 
-# ─── Per-user state helpers ────────────────────────────────────────────────────
+# ─── Per-user state helpers ────────────────────────────────────────────────    
 
 def _ensure(username: str) -> None:
     if username not in user_bots:

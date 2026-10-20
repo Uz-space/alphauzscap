@@ -1,6 +1,5 @@
 """
 main.py — TronPick Bot + FastAPI server
-Ishga tushirish: uvicorn main:app --host 0.0.0.0 --port $PORT
 """
 
 import asyncio
@@ -38,7 +37,7 @@ class TronPickBot:
         self.password         = password
         self.api_key          = api_key
         self.domain           = "tronpick.io"
-        self.balance          = "0.000000"
+        self.balance          = 0.000000
         self.level            = "Stone"
         self.target_timestamp = 0
         self.fp               = _generate_fp()
@@ -157,7 +156,7 @@ class TronPickBot:
                 re.search(r'id="user_balance">([\d.]+)', res.text)
             )
             if bal:
-                self.balance = bal.group(1)
+                self.balance = float(bal.group(1))
 
             lvl = re.search(r'Your level is\s*<b>(.*?)</b>', res.text)
             if lvl:
@@ -168,7 +167,7 @@ class TronPickBot:
                 re.search(r'var\s+autocontrol\s*=\s*(\d+);', res.text) or
                 re.search(r'countDownDate\s*=\s*(\d+);', res.text)
             )
-            self.target_timestamp = int(time.time()) + int(tmr.group(1)) if tmr else int(time.time())
+            self.target_timestamp = int(time.time()) + int(tmr.group(1)) if tmr else int(time.time()) + 3600
             return True
         except Exception:
             return False
@@ -228,8 +227,14 @@ user_state:  dict[str, list[dict[str, Any]]]         = {}
 ws_pool:     dict[str, set[WebSocket]]               = {}
 state_locks: dict[str, threading.Lock]               = {}
 
+# Global event loop reference for safe cross-thread async communication
+_loop: asyncio.AbstractEventLoop = None
 
-# ─── Persistence ──────────────────────────────────────────────────────────────
+@app.on_event("startup")
+async def on_startup():
+    global _loop
+    _loop = asyncio.get_running_loop()
+
 
 def _load_data() -> dict:
     if os.path.exists(DATA_FILE):
@@ -250,8 +255,6 @@ def _hash(password: str) -> str:
     return hashlib.sha256(password.encode()).hexdigest()
 
 
-# ─── Token helpers ─────────────────────────────────────────────────────────────
-
 def _create_token(username: str) -> str:
     token = secrets.token_hex(32)
     TOKENS[token] = username
@@ -265,8 +268,6 @@ def _get_username(credentials: HTTPAuthorizationCredentials = Depends(security))
     return username
 
 
-# ─── Per-user state helpers ────────────────────────────────────────────────    
-
 def _ensure(username: str) -> None:
     if username not in user_bots:
         user_bots[username]   = {}
@@ -275,21 +276,12 @@ def _ensure(username: str) -> None:
         state_locks[username] = threading.Lock()
 
 
-def _acc_index(username: str, email: str) -> int:
+def _acc_index(username: str, name: str) -> int:
     with state_locks[username]:
         for i, a in enumerate(user_state[username]):
-            if a["email"] == email:
+            if a["name"] == name:
                 return i
     return -1
-
-
-def _update_acc(username: str, email: str, **fields) -> None:
-    idx = _acc_index(username, email)
-    if idx == -1:
-        return
-    with state_locks[username]:
-        user_state[username][idx].update(fields)
-    asyncio.run(_push(username))
 
 
 async def _push(username: str) -> None:
@@ -306,9 +298,18 @@ async def _push(username: str) -> None:
     ws_pool[username].difference_update(dead)
 
 
-# ─── Bot worker ────────────────────────────────────────────────────────────────
+def _update_acc(username: str, name: str, **fields) -> None:
+    idx = _acc_index(username, name)
+    if idx == -1:
+        return
+    with state_locks[username]:
+        user_state[username][idx].update(fields)
+    
+    if _loop and _loop.is_running():
+        asyncio.run_coroutine_threadsafe(_push(username), _loop)
 
-def _run_bot(username: str, email: str, password: str, api_key: str, display: str) -> None:
+
+def _run_bot(username: str, email: str, password: str, api_key: str) -> None:
     bot = TronPickBot(
         email=email, password=password, api_key=api_key,
         status_callback=lambda s: _update_acc(username, email, status=s),
@@ -324,59 +325,55 @@ def _run_bot(username: str, email: str, password: str, api_key: str, display: st
         return
 
     bot.update_info()
-    _update_acc(username, email,
-                status="LOGGED IN", balance=bot.balance, level=bot.level,
-                timeLeft=max(0, bot.target_timestamp - int(time.time())))
+    time_left = max(0, bot.target_timestamp - int(time.time()))
+    _update_acc(username, email, status="LOGGED IN", balance=bot.balance, timeLeft=time_left)
 
     while True:
-        time_left = bot.target_timestamp - int(time.time())
-        _update_acc(username, email, timeLeft=max(0, time_left), balance=bot.balance)
+        current_time = int(time.time())
+        time_left = max(0, bot.target_timestamp - current_time)
+        _update_acc(username, email, timeLeft=time_left, balance=bot.balance)
+        
         if time_left <= 0:
             bot.update_info()
             if int(time.time()) >= bot.target_timestamp:
                 bot.claim()
                 time.sleep(2)
                 bot.update_info()
-            _update_acc(username, email,
-                        balance=bot.balance,
-                        timeLeft=max(0, bot.target_timestamp - int(time.time())))
+            time_left = max(0, bot.target_timestamp - int(time.time()))
+            _update_acc(username, email, balance=bot.balance, timeLeft=time_left)
+        
         time.sleep(1)
 
 
 def _boot_bots(username: str, accounts: list) -> None:
     _ensure(username)
     for acc in accounts:
-        email, password, api_key = acc.get("email",""), acc.get("password",""), acc.get("api_key","")
-        display = acc.get("display_name") or email.split("@")[0].upper()
+        email, password, api_key = acc.get("name",""), acc.get("password",""), acc.get("api_key","")
         if not email or not password or not api_key:
             continue
         if _acc_index(username, email) != -1:
             continue
         with state_locks[username]:
             user_state[username].append({
-                "email": email, "display_name": display,
-                "balance": "0.000000", "level": "Stone",
-                "timeLeft": 0, "status": "PENDING",
+                "name": email,
+                "password": password,
+                "balance": 0.000000,
+                "timeLeft": 3600,
+                "status": "PENDING"
             })
-        threading.Thread(target=_run_bot, args=(username, email, password, api_key, display), daemon=True).start()
+        threading.Thread(target=_run_bot, args=(username, email, password, api_key), daemon=True).start()
 
-
-# ─── Auth endpoints ────────────────────────────────────────────────────────────
 
 @app.post("/api/register")
 async def register(payload: dict):
     username = payload.get("username", "").strip().lower()
     password = payload.get("password", "").strip()
     if not username or not password:
-        return {"ok": False, "error": "Fill all fields"}
-    if len(username) < 3:
-        return {"ok": False, "error": "Username min 3 chars"}
-    if len(password) < 4:
-        return {"ok": False, "error": "Password min 4 chars"}
+        return {"ok": False, "error": "Maydonlarni to'ldiring"}
     with _data_lock:
         data = _load_data()
         if username in data["users"]:
-            return {"ok": False, "error": "Username taken"}
+            return {"ok": False, "error": "Bu username band"}
         data["users"][username] = {"password_hash": _hash(password), "accounts": []}
         _save_data(data)
     _ensure(username)
@@ -391,53 +388,37 @@ async def login(payload: dict):
         data = _load_data()
     user = data["users"].get(username)
     if not user or user["password_hash"] != _hash(password):
-        return {"ok": False, "error": "Wrong credentials"}
+        return {"ok": False, "error": "Login yoki parol noto'g'ri"}
     _ensure(username)
     _boot_bots(username, user.get("accounts", []))
     return {"ok": True, "token": _create_token(username), "username": username}
 
 
-@app.post("/api/change-password")
-async def change_password(payload: dict, username: str = Depends(_get_username)):
-    new_pass = payload.get("password", "").strip()
-    if len(new_pass) < 4:
-        return {"ok": False, "error": "Password min 4 chars"}
-    with _data_lock:
-        data = _load_data()
-        if username not in data["users"]:
-            return {"ok": False, "error": "User not found"}
-        data["users"][username]["password_hash"] = _hash(new_pass)
-        _save_data(data)
-    return {"ok": True}
-
-
-# ─── Account endpoints ─────────────────────────────────────────────────────────
-
 @app.post("/api/accounts")
 async def add_account(payload: dict, username: str = Depends(_get_username)):
-    email   = payload.get("email", "").strip()
+    email    = payload.get("name", "").strip()
     password = payload.get("password", "").strip()
     api_key  = payload.get("api_key", "").strip()
-    display  = payload.get("display_name") or email.split("@")[0].upper()
     if not email or not password or not api_key:
-        return {"ok": False, "error": "Missing fields"}
+        return {"ok": False, "error": "Ma'lumotlar to'liq emas"}
     _ensure(username)
     if _acc_index(username, email) != -1:
-        return {"ok": False, "error": "Account already added"}
+        return {"ok": False, "error": "Bu akkaunt allaqachon qo'shilgan"}
+    
     with state_locks[username]:
         user_state[username].append({
-            "email": email, "display_name": display,
-            "balance": "0.000000", "level": "Stone",
-            "timeLeft": 0, "status": "PENDING",
+            "name": email, "password": password,
+            "balance": 0.000000, "timeLeft": 3600, "status": "PENDING"
         })
     with _data_lock:
         data = _load_data()
         accs = data["users"][username].get("accounts", [])
-        if not any(a["email"] == email for a in accs):
-            accs.append({"email": email, "password": password, "api_key": api_key, "display_name": display})
+        if not any(a["name"] == email for a in accs):
+            accs.append({"name": email, "password": password, "api_key": api_key})
             data["users"][username]["accounts"] = accs
             _save_data(data)
-    threading.Thread(target=_run_bot, args=(username, email, password, api_key, display), daemon=True).start()
+            
+    threading.Thread(target=_run_bot, args=(username, email, password, api_key), daemon=True).start()
     asyncio.create_task(_push(username))
     return {"ok": True}
 
@@ -451,25 +432,23 @@ async def list_accounts(username: str = Depends(_get_username)):
 
 @app.post("/api/accounts/update")
 async def update_account(payload: dict, username: str = Depends(_get_username)):
-    email    = payload.get("email", "").strip()
+    email    = payload.get("name", "").strip()
     password = payload.get("password", "").strip()
     if not email or not password:
-        return {"ok": False, "error": "Missing fields"}
-    if len(password) < 4:
-        return {"ok": False, "error": "Password min 4 chars"}
+        return {"ok": False, "error": "Ma'lumotlar yetishmayapti"}
     with _data_lock:
         data = _load_data()
         accs = data["users"].get(username, {}).get("accounts", [])
-        acc  = next((a for a in accs if a["email"] == email), None)
+        acc  = next((a for a in accs if a["name"] == email), None)
         if not acc:
-            return {"ok": False, "error": "Account not found"}
+            return {"ok": False, "error": "Akkaunt topilmadi"}
         acc["password"] = password
         _save_data(data)
     _ensure(username)
     _update_acc(username, email, status="RESTARTING")
     threading.Thread(
         target=_run_bot,
-        args=(username, email, password, acc.get("api_key",""), acc.get("display_name", email.split("@")[0].upper())),
+        args=(username, email, password, acc.get("api_key","")),
         daemon=True,
     ).start()
     return {"ok": True}
@@ -477,26 +456,24 @@ async def update_account(payload: dict, username: str = Depends(_get_username)):
 
 @app.post("/api/accounts/delete")
 async def delete_account(payload: dict, username: str = Depends(_get_username)):
-    email = payload.get("email", "").strip()
+    email = payload.get("name", "").strip()
     if not email:
-        return {"ok": False, "error": "Missing email"}
+        return {"ok": False, "error": "Email ko'rsatilmagan"}
     with _data_lock:
         data = _load_data()
         accs = data["users"].get(username, {}).get("accounts", [])
-        new  = [a for a in accs if a["email"] != email]
+        new  = [a for a in accs if a["name"] != email]
         if len(new) == len(accs):
-            return {"ok": False, "error": "Account not found"}
+            return {"ok": False, "error": "Akkaunt topilmadi"}
         data["users"][username]["accounts"] = new
         _save_data(data)
     _ensure(username)
     with state_locks[username]:
-        user_state[username] = [a for a in user_state[username] if a["email"] != email]
+        user_state[username] = [a for a in user_state[username] if a["name"] != email]
     user_bots.get(username, {}).pop(email, None)
     asyncio.create_task(_push(username))
     return {"ok": True}
 
-
-# ─── WebSocket ─────────────────────────────────────────────────────────────────
 
 @app.websocket("/ws")
 async def websocket_endpoint(ws: WebSocket, token: str = ""):
@@ -517,13 +494,6 @@ async def websocket_endpoint(ws: WebSocket, token: str = ""):
         ws_pool[username].discard(ws)
 
 
-# ─── Static ────────────────────────────────────────────────────────────────────
-
 @app.get("/")
 async def serve_dashboard():
     return FileResponse(os.path.join(os.path.dirname(__file__), "dashboard.html"))
-
-
-@app.on_event("startup")
-async def on_startup():
-    pass

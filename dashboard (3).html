@@ -1,0 +1,1283 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Claimer Pro Dashboard</title>
+    <style>
+        :root {
+            --accent-hue: 0;
+            --accent-sat: 0%;
+            --accent-light: 13%;
+            --accent-color: hsl(var(--accent-hue), var(--accent-sat), var(--accent-light));
+            
+            --nav-font: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", Inter, Roboto, sans-serif;
+            --nav-ease: cubic-bezier(0.32, 0.72, 0, 1);
+            --nav-shadow: 0 1px 2px rgb(0 0 0 / 0.06), 0 8px 24px rgb(0 0 0 / 0.08);
+            
+            --custom-blur: 10px;
+            --custom-saturate: 200%;
+            --surface-alpha: 0.50;
+            --border-alpha: 0.2;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: var(--nav-font);
+            -webkit-tap-highlight-color: transparent;
+            outline: none;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        html, body {
+            width: 100%;
+            height: 100%;
+            background-color: #000;
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+            color: #ffffff;
+            overflow: hidden;
+            transition: background-color 0.3s ease;
+        }
+
+        body {
+            display: flex;
+            flex-direction: column;
+            padding: 12px;
+            position: relative;
+        }
+
+        .bg-solid {
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            z-index: 1;
+            background-color: var(--accent-color);
+            pointer-events: none;
+            transition: background-color 0.3s ease;
+        }
+
+        /* NAVIGATION STYLES */
+        .nav-dark {
+            --stage-bg: transparent;
+            --nav-surface: rgba(30, 30, 30, var(--surface-alpha));
+            --nav-border: rgba(255, 255, 255, var(--border-alpha));
+            --nav-text: rgba(238, 238, 238, 0.933);
+            --nav-text-dim: rgba(238, 238, 238, 0.72);
+        }
+
+        .nav-container { 
+            position: relative; 
+            z-index: 10; 
+            width: 100%;
+            margin-bottom: 5px;
+        }
+
+        .nav-inner { 
+            border: 1px solid var(--nav-border); 
+            border-radius: 28px; 
+            background: var(--nav-surface); 
+            backdrop-filter: saturate(var(--custom-saturate)) blur(var(--custom-blur)); 
+            -webkit-backdrop-filter: saturate(var(--custom-saturate)) blur(var(--custom-blur));
+            box-shadow: var(--nav-shadow); 
+            position: relative; 
+            isolation: isolate; 
+        }
+
+        .nav-row { 
+            height: 56px; 
+            padding: 0 6px; 
+            display: flex; 
+            align-items: center; 
+            justify-content: space-between; 
+            gap: 6px;
+            position: relative; 
+        }
+
+        .nav-left, .nav-right { display: flex; align-items: center; flex-shrink: 0; }
+
+        .nav-center-search {
+            flex: 1;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--nav-border);
+            border-radius: 20px;
+            padding: 0 12px;
+            backdrop-filter: saturate(var(--custom-saturate)) blur(var(--custom-blur));
+            -webkit-backdrop-filter: saturate(var(--custom-saturate)) blur(var(--custom-blur));
+            box-shadow: var(--nav-shadow);
+            transition: all 0.2s ease;
+        }
+
+        .nav-center-search:focus-within {
+            background: var(--nav-surface);
+            border-color: rgba(255, 255, 255, 0.4);
+        }
+
+        .nav-center-search svg {
+            width: 18px;
+            height: 18px;
+            fill: var(--nav-text-dim);
+            margin-right: 8px;
+            flex-shrink: 0;
+        }
+
+        .nav-center-search input {
+            width: 100%;
+            height: 100%;
+            background: transparent;
+            border: none;
+            outline: none;
+            color: var(--nav-text);
+            font-size: 15px;
+            font-family: inherit;
+        }
+
+        .nav-center-search input::placeholder {
+            color: var(--nav-text-dim);
+        }
+
+        .control { 
+            width: 40px; 
+            height: 40px; 
+            border-radius: 50%; 
+            border: 1px solid var(--nav-border); 
+            background: rgba(255, 255, 255, 0.05); 
+            backdrop-filter: saturate(var(--custom-saturate)) blur(var(--custom-blur)); 
+            -webkit-backdrop-filter: saturate(var(--custom-saturate)) blur(var(--custom-blur));
+            box-shadow: var(--nav-shadow); 
+            color: var(--nav-text); 
+            flex-shrink: 0; 
+            padding: 0; 
+            cursor: pointer; 
+            display: grid; 
+            place-items: center; 
+            -webkit-tap-highlight-color: transparent; 
+        }
+
+        .control:hover, .control:active { 
+            background: var(--nav-surface) !important; 
+            color: var(--nav-text) !important; 
+        }
+
+        .upload-btn svg { width: 22px; height: 22px; fill: currentColor; }
+
+        .toggle-btn { display: grid; place-items: center; }
+        .toggle-bar { display: block; width: 20px; height: 2px; background: currentColor; position: relative; border-radius: 2px; }
+        .toggle-bar::before, .toggle-bar::after { content: ""; position: absolute; left: 0; width: 20px; height: 2px; background: currentColor; border-radius: 2px; transition: transform .35s var(--nav-ease), opacity .2s linear; }
+        .toggle-bar::before { top: -6px; }
+        .toggle-bar::after { top: 6px; }
+
+        .sheet { display: grid; grid-template-rows: 0fr; transition: grid-template-rows .6s var(--nav-ease); overflow: hidden; padding: 0 12px; }
+        .sheet-content { overflow: hidden; }
+
+        .mobile-menu { 
+            list-style: none; 
+            margin: 0; 
+            padding: 16px 4px 18px; 
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        .mobile-menu li { 
+            opacity: 0; 
+            transform: translateY(-6px); 
+            transition: opacity .55s var(--nav-ease), transform .55s var(--nav-ease); 
+        }
+        .mobile-menu a { 
+            display: block; 
+            padding: 10px 14px; 
+            font-size: 20px; 
+            font-weight: 600; 
+            color: var(--nav-text-dim); 
+            text-decoration: none; 
+            border-radius: 25px; 
+            cursor: pointer; 
+            transition: background 0.2s ease, color 0.2s ease; 
+        }
+        .mobile-menu a:hover, .mobile-menu a:active, .mobile-menu a.active { 
+            background: rgba(255, 255, 255, 0.16); 
+            color: var(--nav-text); 
+        }
+
+        .nav--open .sheet { grid-template-rows: 1fr; }
+        .nav--open .mobile-menu li { opacity: 1; transform: translateY(0); }
+        .nav--open .mobile-menu li:nth-child(1) { transition-delay: .02s; }
+        .nav--open .mobile-menu li:nth-child(2) { transition-delay: .06s; }
+        .nav--open .mobile-menu li:nth-child(3) { transition-delay: .10s; }
+        .nav--open .toggle-bar { background: transparent; }
+        .nav--open .toggle-bar::before { transform: translateY(6px) rotate(45deg); }
+        .nav--open .toggle-bar::after { transform: translateY(-6px) rotate(-45deg); }
+
+        /* MAIN APP STYLES */
+        .app-root {
+            position: relative;
+            z-index: 2;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0;
+            overflow: hidden;
+        }
+
+        .view-section {
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+            height: 100%;
+            flex-grow: 1;
+            overflow-y: auto;
+            padding-bottom: 80px;
+        }
+
+        .view-section::-webkit-scrollbar {
+            width: 0px;
+        }
+
+        .view-section.hidden {
+            display: none !important;
+        }
+
+        .table-wrapper {
+            background: transparent;
+            border: none;
+            padding: 0;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+            gap: 0;
+        }
+
+        .item-list {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            width: 100%;
+            margin-top: 0;
+        }
+
+        .interactive-card {
+            width: 100%;
+            height: 50px;
+            min-height: 50px;
+            background: rgba(255, 255, 255, 0.04);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            border-radius: 25px;
+            padding: 0 18px;
+            align-items: center;
+            box-sizing: border-box;
+            cursor: pointer;
+            transition: background 0.2s ease;
+        }
+
+        .interactive-card:hover {
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .grid-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+        }
+
+        .col-1, .col-2, .col-3 {
+            text-align: center;
+            justify-self: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        .account-name {
+            font-weight: 500;
+            color: #ffffff;
+            font-size: 14px;
+            letter-spacing: -0.2px;
+        }
+
+        .balance-text {
+            font-weight: 600;
+            color: #ffffff;
+            font-size: 14px;
+        }
+
+        .timer-text {
+            color: rgba(255, 255, 255, 0.85);
+            font-variant-numeric: tabular-nums;
+            font-size: 13px;
+        }
+
+        /* PROFILE SECTION CARDS STYLES */
+        .profile-container {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            width: 100%;
+        }
+
+        .profile-card {
+            width: 100%;
+            min-height: 50px;
+            background: rgba(255, 255, 255, 0.04);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            border-radius: 25px;
+            padding: 0 18px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-sizing: border-box;
+            transition: background 0.2s ease;
+            cursor: pointer;
+        }
+
+        .profile-card:hover {
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .profile-card-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.6);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .profile-card-value {
+            font-size: 14px;
+            font-weight: 500;
+            color: #ffffff;
+        }
+
+        /* SUPPORT SECTION CARDS & ACCORDION (Strelkali uslub) */
+        .support-card-accordion {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.04);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            border-radius: 25px;
+            box-sizing: border-box;
+            overflow: hidden;
+            transition: background 0.2s ease;
+        }
+
+        .support-card-accordion:hover {
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .support-card-header {
+            width: 100%;
+            height: 50px;
+            padding: 0 18px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            cursor: pointer;
+        }
+
+        .support-card-arrow {
+            display: inline-block;
+            width: 7px;
+            height: 7px;
+            border-right: 2px solid #a0a0a0;
+            border-bottom: 2px solid #a0a0a0;
+            transform: rotate(-45deg);
+            transition: transform 0.2s ease;
+        }
+
+        .support-card-accordion.open .support-card-arrow {
+            transform: rotate(45deg);
+            border-color: #ffffff;
+        }
+
+        .support-card-body {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.35s ease, padding 0.35s ease;
+            padding: 0 18px;
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.8);
+            line-height: 1.5;
+        }
+
+        .support-card-accordion.open .support-card-body {
+            max-height: 200px;
+            padding: 0 18px 16px 18px;
+        }
+
+        .telegram-card {
+            width: 100%;
+            min-height: 50px;
+            background: rgba(255, 255, 255, 0.04);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            border-radius: 25px;
+            padding: 0 18px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-sizing: border-box;
+            text-decoration: none;
+            transition: background 0.2s ease;
+        }
+
+        .telegram-card:hover {
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        /* Auth Screen */
+        .auth-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-color: var(--accent-color);
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            z-index: 200;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            transition: opacity 0.3s ease;
+        }
+
+        .auth-overlay.hidden {
+            display: none;
+        }
+
+        .auth-card {
+            background: rgba(255, 255, 255, 0.06);
+            backdrop-filter: blur(30px);
+            -webkit-backdrop-filter: blur(30px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 25px;
+            padding: 28px;
+            width: 100%;
+            max-width: 360px;
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.8);
+        }
+
+        .auth-tabs {
+            display: flex;
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 14px;
+            padding: 4px;
+            margin-bottom: 4px;
+        }
+
+        .auth-tab {
+            flex: 1;
+            text-align: center;
+            padding: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.6);
+            cursor: pointer;
+            border-radius: 10px;
+            transition: all 0.2s ease;
+        }
+
+        .auth-tab.active {
+            background: #ffffff;
+            color: #000000;
+        }
+
+        .auth-title {
+            font-size: 15px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #ffffff;
+            text-align: center;
+            margin-bottom: 4px;
+        }
+
+        .auth-input {
+            width: 100%;
+            height: 46px;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 16px;
+            padding: 0 16px;
+            color: #ffffff;
+            font-size: 14px;
+        }
+
+        .auth-btn {
+            width: 100%;
+            height: 44px;
+            background: #ffffff;
+            color: #000000;
+            border: none;
+            border-radius: 16px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: opacity 0.2s ease;
+            margin-top: 6px;
+        }
+
+        /* Modals */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.25s ease;
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .modal-card {
+            background: rgba(255, 255, 255, 0.06);
+            backdrop-filter: blur(30px);
+            -webkit-backdrop-filter: blur(30px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 25px;
+            padding: 24px;
+            width: 100%;
+            max-width: 350px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.8);
+        }
+
+        .modal-title {
+            font-size: 13px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #ffffff;
+            text-align: center;
+        }
+
+        .modal-input {
+            width: 100%;
+            height: 46px;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 16px;
+            padding: 0 16px;
+            color: #ffffff;
+            font-size: 14px;
+        }
+
+        .modal-actions {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 8px;
+        }
+
+        .btn {
+            height: 38px;
+            padding: 0 18px;
+            border-radius: 19px;
+            font-size: 13px;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+            transition: opacity 0.2s ease;
+        }
+
+        .btn-cancel {
+            background: rgba(255, 255, 255, 0.15);
+            color: #cccccc;
+        }
+
+        .btn-save {
+            background: #ffffff;
+            color: #000000;
+        }
+
+        .btn-danger {
+            background: rgba(255, 50, 50, 0.8);
+            color: #ffffff;
+        }
+
+        .glass-tab-bar {
+            position: absolute;
+            bottom: 16px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: inline-flex;
+            justify-content: center;
+            align-items: center;
+            padding: 4px;
+            background: rgba(255, 255, 255, 0.06);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 36px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            z-index: 10;
+            flex-shrink: 0;
+        }
+
+        .tab-item {
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 56px;
+            height: 56px;
+            color: #ffffff;
+            text-decoration: none;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            cursor: pointer;
+            transition: transform 0.2s ease, background 0.2s ease;
+        }
+
+        .tab-item svg {
+            width: 22px;
+            height: 22px;
+            fill: currentColor;
+        }
+
+        .empty-msg {
+            text-align: center;
+            color: rgba(255, 255, 255, 0.4);
+            margin-top: 15px;
+            font-size: 13px;
+        }
+    </style>
+</head>
+<body class="nav-dark">
+
+    <div class="bg-solid"></div>
+
+    <div class="app-root">
+        <!-- TOP NAVIGATION SECTION -->
+        <nav class="nav-container" aria-label="Main navigation">
+            <div class="nav-inner">
+                <div class="nav-row">
+                    <div class="nav-left">
+                        <input type="file" id="bg-upload-input" accept="image/*" style="display: none;" />
+                        <button class="control upload-btn" type="button" id="bg-upload-btn" aria-label="Upload background" title="Orqa fonni o'zgartirish">
+                            <svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+                        </button>
+                    </div>
+
+                    <div class="nav-center-search" id="searchBarContainer">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
+                        </svg>
+                        <input type="text" id="search-input" placeholder="Qidiruv..." aria-label="Qidirish">
+                    </div>
+
+                    <div class="nav-right">
+                        <button class="control toggle-btn" type="button" aria-label="Open menu" aria-expanded="false" aria-controls="sheet">
+                            <span class="toggle-bar"></span>
+                        </button>
+                    </div>
+                </div>
+                <div class="sheet" id="sheet" aria-hidden="true" inert>
+                    <div class="sheet-content">
+                        <ul class="mobile-menu">
+                            <li><a class="active" data-page="homeView">Home</a></li>
+                            <li><a data-page="profileView">Profile</a></li>
+                            <li><a data-page="supportView">Support</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </nav>
+        
+        <!-- HOME DASHBOARD VIEW -->
+        <div class="view-section" id="homeView">
+            <div class="table-wrapper">
+                <div class="item-list" id="accountsBody"></div>
+            </div>
+        </div>
+
+        <!-- PROFILE VIEW -->
+        <div class="view-section hidden" id="profileView">
+            <div class="table-wrapper">
+                <div class="profile-container" id="profileContainerList">
+                    <!-- 1. Username Card -->
+                    <div class="profile-card">
+                        <span class="profile-card-title">Username</span>
+                        <span class="profile-card-value" id="profileUsernameVal">Foydalanuvchi</span>
+                    </div>
+
+                    <!-- 2. Language Card -->
+                    <div class="profile-card">
+                        <span class="profile-card-title">Language</span>
+                        <span class="profile-card-value">O'zbekcha</span>
+                    </div>
+
+                    <!-- 3. API Key card -->
+                    <div class="profile-card" id="openAddApiKeyCard">
+                        <span class="profile-card-title">API Key</span>
+                        <span class="profile-card-value" style="font-size: 12px; opacity: 0.7;" id="apiKeyValStatus">Bo'sh</span>
+                    </div>
+
+                    <!-- Dinamik qo'shilgan API Key'lar -->
+                    <div id="dynamicApiKeyList" style="display: none; flex-direction: column; gap: 5px; width: 100%;"></div>
+
+                    <!-- 4. Aktiv Akkauntlar Card -->
+                    <div class="profile-card">
+                        <span class="profile-card-title">Aktiv Akkauntlar</span>
+                        <span class="profile-card-value" id="profileAccCount">0 ta</span>
+                    </div>
+
+                    <!-- 5. Tizimdan chiqish tugmasi -->
+                    <div class="profile-card" style="background: rgba(255, 50, 50, 0.2); border-color: rgba(255, 50, 50, 0.4); cursor: pointer;" onclick="logout()">
+                        <span class="profile-card-title" style="color: #ff6b6b;">Tizimdan chiqish</span>
+                        <span class="profile-card-value" style="color: #ff6b6b;">&rarr;</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SUPPORT VIEW -->
+        <div class="view-section hidden" id="supportView">
+            <div class="profile-container">
+                <!-- 1-bosqich Card -->
+                <div class="support-card-accordion">
+                    <div class="support-card-header" onclick="toggleAccordion(this)">
+                        <span class="profile-card-title">1. Akkaunt qo'shish</span>
+                        <span class="support-card-arrow"></span>
+                    </div>
+                    <div class="support-card-body">
+                        Pastki markazdagi <b>(+)</b> tugmasini bosing, email va parolni kiritib saqlang. Shundan so'ng 1 soatlik taymer va balans avtomatik ishga tushadi.
+                    </div>
+                </div>
+
+                <!-- 2-bosqich Card -->
+                <div class="support-card-accordion">
+                    <div class="support-card-header" onclick="toggleAccordion(this)">
+                        <span class="profile-card-title">2. Boshqarish va O'zgartirish</span>
+                        <span class="support-card-arrow"></span>
+                    </div>
+                    <div class="support-card-body">
+                        Ro'yxatdagi istalgan akkaunt ustiga bosib, uning parolini yangilashingiz yoki o'chirib yuborishingiz mumkin.
+                    </div>
+                </div>
+
+                <!-- 3-bosqich Card -->
+                <div class="support-card-accordion">
+                    <div class="support-card-header" onclick="toggleAccordion(this)">
+                        <span class="profile-card-title">3. Orqa fonni sozlash</span>
+                        <span class="support-card-arrow"></span>
+                    </div>
+                    <div class="support-card-body">
+                        Yuqori chap burchakdagi yuklash tugmasi orqali qurilmangizdan istalgan rasmni tanlab, orqa fon qilishingiz mumkin.
+                    </div>
+                </div>
+
+                <!-- 4-bosqich Card -->
+                <div class="support-card-accordion">
+                    <div class="support-card-header" onclick="toggleAccordion(this)">
+                        <span class="profile-card-title">4. API Kalitlarini qo'shish</span>
+                        <span class="support-card-arrow"></span>
+                    </div>
+                    <div class="support-card-body">
+                        Profile bo'limiga o'tib, API Key kartochkasi orqali o'z tokenlaringizni xavfsiz qo'shishingiz va boshqarishingiz mumkin.
+                    </div>
+                </div>
+
+                <!-- Telegram Support Card -->
+                <a href="https://t.me/alphauzs" target="_blank" class="telegram-card">
+                    <span class="profile-card-title" style="color: #ffffff;">Telegram Support</span>
+                    <span class="profile-card-value" style="color: rgba(255, 255, 255, 0.8);">@alphauzs</span>
+                </a>
+            </div>
+        </div>
+
+        <!-- TAB BAR (Only + Button) -->
+        <nav class="glass-tab-bar" id="tabBar">
+            <a href="javascript:void(0)" class="tab-item" id="openAddAccountModalBtn" title="Akkaunt qo'shish">
+                <svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+            </a>
+        </nav>
+    </div>
+
+    <!-- Login / Register Screen -->
+    <div class="auth-overlay" id="authScreen">
+        <div class="auth-card">
+            <div class="auth-tabs">
+                <div class="auth-tab active" id="tabLogin" onclick="switchAuthMode('login')">Login</div>
+                <div class="auth-tab" id="tabRegister" onclick="switchAuthMode('register')">Register</div>
+            </div>
+            <div class="auth-title" id="authTitle">Welcome Back</div>
+            <input type="text" class="auth-input" id="authUsername" placeholder="Username">
+            <input type="password" class="auth-input" id="authPassword" placeholder="Password">
+            <p id="authError" style="color:#f44336;font-size:13px;margin-top:8px;display:none;text-align:center;"></p>
+            <button class="auth-btn" id="authSubmitBtn" onclick="handleAuth()">Sign In</button>
+        </div>
+    </div>
+
+    <!-- Add Account Modal Popup -->
+    <div class="modal-overlay" id="addAccountModal">
+        <div class="modal-card">
+            <div class="modal-title">Akkaunt qo'shish</div>
+            <input type="email"    class="modal-input" id="newAccountEmail"    placeholder="Email">
+            <input type="password" class="modal-input" id="newAccountPassword" placeholder="Parol">
+            <p id="addAccError" style="color:#f44336;font-size:12px;margin-top:6px;display:none;"></p>
+            <div class="modal-actions">
+                <button class="btn btn-cancel" id="cancelAddAccBtn">Bekor qilish</button>
+                <button class="btn btn-save"   id="saveAddAccBtn">Qo'shish</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add API Key Modal Popup -->
+    <div class="modal-overlay" id="addApiKeyModal">
+        <div class="modal-card">
+            <div class="modal-title">API Key qo'shish</div>
+            <input type="text" class="modal-input" id="newApiKeyName" placeholder="API Key nomi (masalan: Token)">
+            <input type="text" class="modal-input" id="newApiKeyValue" placeholder="Kalit qiymati">
+            <div class="modal-actions">
+                <button class="btn btn-cancel" id="cancelAddApiKeyBtn">Bekor qilish</button>
+                <button class="btn btn-save" id="saveAddApiKeyBtn">Saqlash</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Account Action Modal (Edit Password / Delete) -->
+    <div class="modal-overlay" id="accountActionModal">
+        <div class="modal-card">
+            <div class="modal-title" id="actionModalTitle">Akkauntni boshqarish</div>
+            <input type="password" class="modal-input" id="editPasswordInput" placeholder="Yangi parol">
+            <div class="modal-actions" style="flex-direction: column; gap: 8px;">
+                <button class="btn btn-save" id="saveEditPassBtn" style="width: 100%;">Parolni yangilash</button>
+                <button class="btn btn-danger" id="deleteAccountBtn" style="width: 100%;">Akkauntni o'chirish</button>
+                <button class="btn btn-cancel" id="cancelActionBtn" style="width: 100%;">Bekor qilish</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ── State ──────────────────────────────────────────────────────────────
+        let authToken   = sessionStorage.getItem('authToken') || null;
+        let currentUser = sessionStorage.getItem('authUser')  || null;
+        let accounts    = [];
+        let apiKeys     = [];
+        let selectedAccountEmail = null;
+        let searchQuery = '';
+        let ws = null;
+
+        // ── Helpers ────────────────────────────────────────────────────────────
+        function showErr(id, msg) {
+            const el = document.getElementById(id);
+            if (!el) return;
+            el.textContent = msg;
+            el.style.display = msg ? 'block' : 'none';
+        }
+
+        function formatTime(seconds) {
+            if (!seconds || seconds <= 0) return 'Tayyor';
+            const m = Math.floor(seconds / 60);
+            const s = seconds % 60;
+            return `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+        }
+
+        function statusColor(s) {
+            if (!s) return '#aaa';
+            const u = s.toUpperCase();
+            if (u === 'SUCCESS' || u === 'LOGGED IN') return '#4caf50';
+            if (u === 'ERROR')                         return '#f44336';
+            if (u === 'PROCESSING')                    return '#ff9800';
+            if (u === 'CONNECTING')                    return '#29b6f6';
+            return '#aaaaaa';
+        }
+
+        // ── Render ─────────────────────────────────────────────────────────────
+        function render() {
+            const container = document.getElementById('accountsBody');
+            if (!container) return;
+            container.innerHTML = '';
+
+            const filtered = accounts.filter(a =>
+                (a.display_name || a.email || '').toLowerCase().includes(searchQuery)
+            );
+
+            if (filtered.length === 0) {
+                container.innerHTML = `<div class="empty-msg">${
+                    accounts.length === 0
+                        ? "Hali akkauntlar qo'shilmadi."
+                        : 'Mos keladigan akkaunt topilmadi.'
+                }</div>`;
+            } else {
+                filtered.forEach(acc => {
+                    const row = document.createElement('div');
+                    row.className = 'interactive-card grid-row';
+                    const isRunning = acc.status && acc.status !== 'SUCCESS' && acc.status !== 'LOGGED IN';
+                    const col3 = isRunning
+                        ? `<span class="timer-text" style="color:${statusColor(acc.status)}">${acc.status}</span>`
+                        : `<span class="timer-text">${formatTime(acc.timeLeft)}</span>`;
+                    row.innerHTML = `
+                        <div class="col-1"><span class="account-name">${acc.display_name || acc.email}</span></div>
+                        <div class="col-2"><span class="balance-text">${parseFloat(acc.balance||0).toFixed(6)}</span></div>
+                        <div class="col-3">${col3}</div>
+                    `;
+                    row.addEventListener('click', () => openAccountActionModal(acc.email));
+                    container.appendChild(row);
+                });
+            }
+
+            const countEl = document.getElementById('profileAccCount');
+            if (countEl) countEl.textContent = `${accounts.length} ta`;
+            renderApiKeys();
+        }
+
+        function renderApiKeys() {
+            const list = document.getElementById('dynamicApiKeyList');
+            const status = document.getElementById('apiKeyValStatus');
+            if (!list) return;
+            list.innerHTML = '';
+            if (apiKeys.length > 0) {
+                if (status) status.textContent = `${apiKeys.length} ta saqlangan`;
+                list.style.display = 'flex';
+                apiKeys.forEach((k, i) => {
+                    const card = document.createElement('div');
+                    card.className = 'profile-card';
+                    card.innerHTML = `
+                        <span class="profile-card-title">${k.name}</span>
+                        <div style="display:flex;align-items:center;gap:10px;">
+                            <span class="profile-card-value" style="font-size:12px;opacity:0.7">${k.key.substring(0,6)}...</span>
+                            <button class="btn btn-danger" style="height:26px;padding:0 10px;font-size:11px;border-radius:13px;"
+                                onclick="deleteApiKey(${i})">O'chirish</button>
+                        </div>`;
+                    list.appendChild(card);
+                });
+            } else {
+                if (status) status.textContent = "Bo'sh";
+                list.style.display = 'none';
+            }
+        }
+
+        // ── WebSocket ──────────────────────────────────────────────────────────
+        function connectWS() {
+            if (!authToken) return;
+            const proto = location.protocol === 'https:' ? 'wss' : 'ws';
+            ws = new WebSocket(`${proto}://${location.host}/ws?token=${authToken}`);
+
+            ws.onmessage = e => {
+                const msg = JSON.parse(e.data);
+                if (msg.type === 'state') {
+                    accounts = msg.accounts || [];
+                    render();
+                }
+            };
+            ws.onclose = () => { if (authToken) setTimeout(connectWS, 3000); };
+            ws.onerror = () => ws.close();
+            setInterval(() => { if (ws && ws.readyState === 1) ws.send('ping'); }, 20000);
+        }
+
+        // ── Auth ───────────────────────────────────────────────────────────────
+        let authMode = 'login';
+
+        function switchAuthMode(mode) {
+            authMode = mode;
+            document.getElementById('tabLogin').classList.toggle('active', mode === 'login');
+            document.getElementById('tabRegister').classList.toggle('active', mode === 'register');
+            document.getElementById('authTitle').textContent     = mode === 'login' ? 'Welcome Back' : 'Create Account';
+            document.getElementById('authSubmitBtn').textContent = mode === 'login' ? 'Sign In' : 'Sign Up';
+            showErr('authError', '');
+        }
+
+        async function handleAuth() {
+            const username = document.getElementById('authUsername').value.trim().toLowerCase();
+            const password = document.getElementById('authPassword').value.trim();
+            if (!username || !password) { showErr('authError', 'Maydonlarni to'ldiring'); return; }
+
+            const res  = await fetch(authMode === 'login' ? '/api/login' : '/api/register', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, password })
+            });
+            const data = await res.json();
+            if (!data.ok) { showErr('authError', data.error || 'Xatolik'); return; }
+
+            authToken   = data.token;
+            currentUser = data.username;
+            sessionStorage.setItem('authToken', authToken);
+            sessionStorage.setItem('authUser', currentUser);
+
+            const usernameEl = document.getElementById('profileUsernameVal');
+            if (usernameEl) usernameEl.textContent = currentUser;
+
+            const authScreen = document.getElementById('authScreen');
+            authScreen.style.opacity = '0';
+            setTimeout(() => authScreen.classList.add('hidden'), 300);
+
+            const accs = await fetch('/api/accounts', {
+                headers: { 'Authorization': `Bearer ${authToken}` }
+            }).then(r => r.json());
+            accounts = accs.accounts || [];
+            render();
+            connectWS();
+        }
+
+        function logout() {
+            authToken = null;
+            currentUser = null;
+            accounts = [];
+            if (ws) { ws.close(); ws = null; }
+            sessionStorage.clear();
+            render();
+            const authScreen = document.getElementById('authScreen');
+            authScreen.classList.remove('hidden');
+            authScreen.style.opacity = '1';
+            document.getElementById('authUsername').value = '';
+            document.getElementById('authPassword').value = '';
+            switchAuthMode('login');
+        }
+
+        // ── Add Account Modal ──────────────────────────────────────────────────
+        const addAccountModal = document.getElementById('addAccountModal');
+
+        document.getElementById('openAddAccountModalBtn').addEventListener('click', () => {
+            document.getElementById('newAccountEmail').value    = '';
+            document.getElementById('newAccountPassword').value = '';
+            showErr('addAccError', '');
+            addAccountModal.classList.add('active');
+            document.getElementById('newAccountEmail').focus();
+        });
+
+        document.getElementById('cancelAddAccBtn').addEventListener('click', () => {
+            addAccountModal.classList.remove('active');
+        });
+
+        document.getElementById('saveAddAccBtn').addEventListener('click', async () => {
+            const email    = document.getElementById('newAccountEmail').value.trim();
+            const password = document.getElementById('newAccountPassword').value.trim();
+            if (!email || !password) {
+                showErr('addAccError', 'Email va parolni kiriting');
+                return;
+            }
+            if (apiKeys.length === 0) {
+                showErr('addAccError', 'Avval Profile > API Key qo\'shish');
+                return;
+            }
+            const api_key = apiKeys[0].key;
+            const res  = await fetch('/api/accounts', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
+                body: JSON.stringify({ email, password, api_key, display_name: email.split('@')[0].toUpperCase() })
+            });
+            const data = await res.json();
+            if (!data.ok) { showErr('addAccError', data.error || 'Xatolik'); return; }
+            addAccountModal.classList.remove('active');
+        });
+
+        // ── Account Action Modal (edit bot password / delete) ──────────────────
+        const accountActionModal = document.getElementById('accountActionModal');
+
+        function openAccountActionModal(email) {
+            selectedAccountEmail = email;
+            const acc = accounts.find(a => a.email === email);
+            document.getElementById('actionModalTitle').textContent = acc ? (acc.display_name || acc.email) : email;
+            document.getElementById('editPasswordInput').value = '';
+            accountActionModal.classList.add('active');
+            document.getElementById('editPasswordInput').focus();
+        }
+
+        document.getElementById('cancelActionBtn').addEventListener('click', () => {
+            accountActionModal.classList.remove('active');
+        });
+
+        document.getElementById('saveEditPassBtn').addEventListener('click', async () => {
+            const newPass = document.getElementById('editPasswordInput').value.trim();
+            if (!newPass) { alert("Parol bo'sh bo'lishi mumkin emas!"); return; }
+            const res  = await fetch('/api/accounts/update', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
+                body: JSON.stringify({ email: selectedAccountEmail, password: newPass })
+            });
+            const data = await res.json();
+            alert(data.ok ? 'Parol yangilandi!' : (data.error || 'Xatolik'));
+            if (data.ok) accountActionModal.classList.remove('active');
+        });
+
+        document.getElementById('deleteAccountBtn').addEventListener('click', async () => {
+            if (!confirm("Haqiqatan ham bu akkauntni o'chirmoqchimisiz?")) return;
+            const res  = await fetch('/api/accounts/delete', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
+                body: JSON.stringify({ email: selectedAccountEmail })
+            });
+            const data = await res.json();
+            if (data.ok) {
+                accounts = accounts.filter(a => a.email !== selectedAccountEmail);
+                render();
+                accountActionModal.classList.remove('active');
+            } else {
+                alert(data.error || 'Xatolik');
+            }
+        });
+
+        // ── API Keys (local, stored in sessionStorage) ─────────────────────────
+        const addApiKeyModal = document.getElementById('addApiKeyModal');
+
+        document.getElementById('openAddApiKeyCard').addEventListener('click', () => {
+            document.getElementById('newApiKeyName').value  = '';
+            document.getElementById('newApiKeyValue').value = '';
+            addApiKeyModal.classList.add('active');
+            document.getElementById('newApiKeyName').focus();
+        });
+
+        document.getElementById('cancelAddApiKeyBtn').addEventListener('click', () => {
+            addApiKeyModal.classList.remove('active');
+        });
+
+        document.getElementById('saveAddApiKeyBtn').addEventListener('click', () => {
+            const name = document.getElementById('newApiKeyName').value.trim();
+            const key  = document.getElementById('newApiKeyValue').value.trim();
+            if (!name || !key) { alert('Nom va kalit qiymatini kiriting'); return; }
+            apiKeys.push({ name, key });
+            renderApiKeys();
+            addApiKeyModal.classList.remove('active');
+        });
+
+        function deleteApiKey(index) {
+            if (confirm("Haqiqatan ham bu API kalitni o'chirmoqchimisiz?")) {
+                apiKeys.splice(index, 1);
+                renderApiKeys();
+            }
+        }
+
+        // ── Search ─────────────────────────────────────────────────────────────
+        document.getElementById('search-input').addEventListener('input', function(e) {
+            searchQuery = e.target.value.toLowerCase().trim();
+            render();
+        });
+
+        // ── Navigation ─────────────────────────────────────────────────────────
+        (function () {
+            const nav     = document.querySelector('.nav-container');
+            const sheet   = document.getElementById('sheet');
+            const toggle  = document.querySelector('.toggle-btn');
+            const links   = Array.from(sheet.querySelectorAll('.mobile-menu a'));
+            const uploadBtn   = document.getElementById('bg-upload-btn');
+            const uploadInput = document.getElementById('bg-upload-input');
+
+            uploadBtn.addEventListener('click', () => uploadInput.click());
+            uploadInput.addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = ev => {
+                    document.body.style.backgroundImage = `url('${ev.target.result}')`;
+                    document.querySelector('.bg-solid').style.backgroundColor = 'transparent';
+                };
+                reader.readAsDataURL(file);
+            });
+
+            function switchPage(pageId) {
+                document.querySelectorAll('.view-section').forEach(v => v.classList.add('hidden'));
+                const view = document.getElementById(pageId);
+                if (view) view.classList.remove('hidden');
+                const searchBar = document.getElementById('searchBarContainer');
+                const tabBar    = document.getElementById('tabBar');
+                if (pageId === 'homeView') {
+                    searchBar.style.display = 'flex';
+                    tabBar.style.display    = 'inline-flex';
+                } else {
+                    searchBar.style.display = 'none';
+                    tabBar.style.display    = 'none';
+                }
+            }
+
+            function setOpen(open) {
+                const isOpen = typeof open === 'boolean' ? open : !nav.classList.contains('nav--open');
+                nav.classList.toggle('nav--open', isOpen);
+                toggle.setAttribute('aria-expanded', String(isOpen));
+                toggle.setAttribute('aria-label', isOpen ? 'Close menu' : 'Open menu');
+                sheet.setAttribute('aria-hidden', String(!isOpen));
+                if (isOpen) sheet.removeAttribute('inert'); else sheet.setAttribute('inert', '');
+            }
+
+            links.forEach(link => {
+                link.addEventListener('click', function() {
+                    links.forEach(l => l.classList.remove('active'));
+                    this.classList.add('active');
+                    switchPage(this.getAttribute('data-page'));
+                    setOpen(false);
+                });
+            });
+
+            toggle.addEventListener('click', () => setOpen());
+            document.addEventListener('keydown', e => {
+                if (e.key === 'Escape' && nav.classList.contains('nav--open')) {
+                    setOpen(false);
+                    toggle.focus();
+                }
+            });
+        })();
+
+        // ── Accordion ──────────────────────────────────────────────────────────
+        function toggleAccordion(header) {
+            const parent = header.parentElement;
+            const isOpen = parent.classList.contains('open');
+            document.querySelectorAll('.support-card-accordion').forEach(c => c.classList.remove('open'));
+            if (!isOpen) parent.classList.add('open');
+        }
+
+        // ── Boot ───────────────────────────────────────────────────────────────
+        window.addEventListener('load', async () => {
+            render();
+            if (authToken && currentUser) {
+                const usernameEl = document.getElementById('profileUsernameVal');
+                if (usernameEl) usernameEl.textContent = currentUser;
+
+                const authScreen = document.getElementById('authScreen');
+                authScreen.style.opacity = '0';
+                authScreen.classList.add('hidden');
+
+                try {
+                    const data = await fetch('/api/accounts', {
+                        headers: { 'Authorization': `Bearer ${authToken}` }
+                    }).then(r => r.json());
+                    accounts = data.accounts || [];
+                    render();
+                    connectWS();
+                } catch {
+                    sessionStorage.clear();
+                    authToken = null;
+                    const as = document.getElementById('authScreen');
+                    as.style.opacity = '1';
+                    as.classList.remove('hidden');
+                }
+            }
+        });
+    </script>
+
+</body>
+</html>
